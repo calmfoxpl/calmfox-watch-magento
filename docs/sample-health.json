@@ -1,0 +1,113 @@
+{
+    "schema": 1,
+    "plugin": "1.0.0",
+    "status": "warn",
+    "checks": [
+        {
+            "id": "db",
+            "status": "ok",
+            "label": "Baza danych",
+            "detail": null,
+            "fix": null,
+            "command": null,
+            "ms": 4
+        },
+        {
+            "id": "disk",
+            "status": "warn",
+            "label": "Miejsce na dysku",
+            "detail": "Sklep zajmuje 41,8 GB. To 87% z podanego limitu konta 48,0 GB. Poza tym miejsce zajmują poczta i pozostałe strony na koncie.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "smtp",
+            "status": "ok",
+            "label": "Wysyłka e-mail (SMTP)",
+            "detail": "Serwer smtp.example.com:587 przyjmuje połączenia. To test połączenia, nie doręczenia wiadomości.",
+            "fix": null,
+            "command": null,
+            "ms": 134
+        },
+        {
+            "id": "magento_cron",
+            "status": "ok",
+            "label": "Zadania cykliczne (cron)",
+            "detail": "Ostatnie zadanie zakończone powodzeniem 47 s temu.",
+            "fix": null,
+            "command": null,
+            "ms": 6
+        },
+        {
+            "id": "indexers",
+            "status": "warn",
+            "label": "Indeksy sklepu",
+            "detail": "Nieaktualne indeksy: catalog_product_price. Kupujący mogą widzieć stare ceny, stany magazynowe albo niepełne kategorie. Przebuduj poleceniem bin/magento indexer:reindex.",
+            "fix": null,
+            "command": null,
+            "ms": 9
+        },
+        {
+            "id": "app_cache",
+            "status": "ok",
+            "label": "Pamięć podręczna aplikacji (Redis)",
+            "detail": null,
+            "fix": null,
+            "command": null,
+            "ms": 2
+        },
+        {
+            "id": "checkout",
+            "status": "ok",
+            "label": "Ścieżka zakupowa",
+            "detail": "Każdy z 2 włączonych widoków sklepu ma czynną metodę płatności i dostawy.",
+            "fix": null,
+            "command": null,
+            "ms": 12
+        },
+        {
+            "id": "search_engine",
+            "status": "ok",
+            "label": "Wyszukiwarka (Elasticsearch / OpenSearch)",
+            "detail": "Stan klastra: green (silnik opensearch).",
+            "fix": null,
+            "command": null,
+            "ms": 21
+        },
+        {
+            "id": "queue",
+            "status": "ok",
+            "label": "Kolejki wiadomości",
+            "detail": "W kolejce czeka 6 wiadomości, najstarsza od 38 s.",
+            "fix": null,
+            "command": null,
+            "ms": 5
+        }
+    ],
+    "site": {
+        "wp": "2.4.7-p3",
+        "php": "8.3.14",
+        "plugin": "1.0.0",
+        "updates": {
+            "core": 0,
+            "plugins": 7,
+            "themes": 0
+        }
+    },
+    "signals": {
+        "adminCount": 4,
+        "adminsFingerprint": "847ff6ec44dc5ca8893ec4ab2a9b45bf",
+        "newestAdminAt": "2026-07-30T09:12:00+00:00",
+        "pluginCount": 6,
+        "pluginsFingerprint": "072afaba612d6a1caab8ea1181989c86",
+        "activePlugins": [
+            "Calmfox_Watch",
+            "Magento_Backend",
+            "Magento_Catalog",
+            "Magento_Checkout",
+            "Magento_Sales",
+            "Magento_TwoFactorAuth"
+        ]
+    }
+}

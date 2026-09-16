@@ -1,0 +1,105 @@
+<?xml version="1.0"?>
+<!--
+    Cały montaż modułu w jednym pliku. Dwie decyzje warte wyjaśnienia:
+
+    1. Rdzeń (Calmfox\Watch\Core) nie zna Magento, więc kontener dostaje
+       preferencje do cienkich klas z Model/, które podają mu tylko ścieżkę
+       katalogu stanu. Dzięki temu logikę kontraktu testujemy bez kontenera.
+    2. Każdy odbiorca HTTP ma własny typ wirtualny klienta. Magento współdzieli
+       instancje, a klient Curl zapamiętuje nagłówki i limity czasu między
+       wywołaniami: jeden wspólny obiekt oznaczałby, że nagłówki parowania
+       pojadą do klastra wyszukiwarki.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Calmfox\Watch\Core\StateStore" type="Calmfox\Watch\Model\StateStore"/>
+    <preference for="Calmfox\Watch\Core\FileCache" type="Calmfox\Watch\Model\FileCache"/>
+
+    <!-- ── Klienci HTTP: osobna instancja na każdego rozmówcę ───────────── -->
+    <virtualType name="Calmfox\Watch\Model\HubHttpClient" type="Magento\Framework\HTTP\Client\Curl"/>
+    <virtualType name="Calmfox\Watch\Model\LoopbackHttpClient" type="Magento\Framework\HTTP\Client\Curl"/>
+    <virtualType name="Calmfox\Watch\Model\SearchHttpClient" type="Magento\Framework\HTTP\Client\Curl"/>
+
+    <type name="Calmfox\Watch\Model\HubClient">
+        <arguments>
+            <argument name="httpClient" xsi:type="object">Calmfox\Watch\Model\HubHttpClient</argument>
+            <argument name="loopbackClient" xsi:type="object">Calmfox\Watch\Model\LoopbackHttpClient</argument>
+        </arguments>
+    </type>
+
+    <type name="Calmfox\Watch\Check\Health\SearchEngineCheck">
+        <arguments>
+            <argument name="httpClient" xsi:type="object">Calmfox\Watch\Model\SearchHttpClient</argument>
+        </arguments>
+    </type>
+
+    <!--
+        ── Sekcja health ──────────────────────────────────────────────────
+        Kolejność wpisów jest kolejnością w payloadzie i na ekranie: najpierw
+        to, co wywraca sklep od razu (baza, dysk, poczta), potem to, co psuje
+        go po cichu (cron, indeksy, kolejki).
+
+        Własny check dopina się do tej listy z etc/di.xml projektu: wystarczy
+        powtórzyć ten typ wirtualny z jednym dodatkowym wpisem (przykład
+        w README). Wpis o tej samej nazwie nadpisuje nasz, więc da się też
+        wyłączyć pojedyncze sprawdzenie.
+    -->
+    <virtualType name="Calmfox\Watch\Model\HealthRunner" type="Calmfox\Watch\Check\CheckRunner">
+        <arguments>
+            <argument name="checks" xsi:type="array">
+                <item name="db" xsi:type="object">Calmfox\Watch\Check\Health\DatabaseCheck</item>
+                <item name="disk" xsi:type="object">Calmfox\Watch\Check\Health\DiskCheck</item>
+                <item name="smtp" xsi:type="object">Calmfox\Watch\Check\Health\SmtpCheck</item>
+                <item name="magento_cron" xsi:type="object">Calmfox\Watch\Check\Health\MagentoCronCheck</item>
+                <item name="indexers" xsi:type="object">Calmfox\Watch\Check\Health\IndexersCheck</item>
+                <item name="app_cache" xsi:type="object">Calmfox\Watch\Check\Health\AppCacheCheck</item>
+                <item name="checkout" xsi:type="object">Calmfox\Watch\Check\Health\CheckoutCheck</item>
+                <item name="search_engine" xsi:type="object">Calmfox\Watch\Check\Health\SearchEngineCheck</item>
+                <item name="queue" xsi:type="object">Calmfox\Watch\Check\Health\QueueCheck</item>
+            </argument>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- ── Sekcja security: podstawowa higiena, nie audyt ───────────────── -->
+    <virtualType name="Calmfox\Watch\Model\SecurityRunner" type="Calmfox\Watch\Check\CheckRunner">
+        <arguments>
+            <argument name="checks" xsi:type="array">
+                <item name="admin_count" xsi:type="object">Calmfox\Watch\Check\Security\AdminCountCheck</item>
+                <item name="admin_login" xsi:type="object">Calmfox\Watch\Check\Security\AdminLoginCheck</item>
+                <item name="admin_path" xsi:type="object">Calmfox\Watch\Check\Security\AdminPathCheck</item>
+                <item name="two_factor" xsi:type="object">Calmfox\Watch\Check\Security\TwoFactorCheck</item>
+                <item name="app_mode" xsi:type="object">Calmfox\Watch\Check\Security\AppModeCheck</item>
+                <item name="debug_display" xsi:type="object">Calmfox\Watch\Check\Security\DebugDisplayCheck</item>
+                <item name="https" xsi:type="object">Calmfox\Watch\Check\Security\HttpsCheck</item>
+                <item name="php_version" xsi:type="object">Calmfox\Watch\Check\Security\PhpVersionCheck</item>
+                <item name="config_perms" xsi:type="object">Calmfox\Watch\Check\Security\ConfigPermsCheck</item>
+                <item name="dir_perms" xsi:type="object">Calmfox\Watch\Check\Security\DirPermsCheck</item>
+                <item name="crypt_key" xsi:type="object">Calmfox\Watch\Check\Security\CryptKeyCheck</item>
+                <item name="dev_packages" xsi:type="object">Calmfox\Watch\Check\Security\DevPackagesCheck</item>
+                <item name="pending_updates" xsi:type="object">Calmfox\Watch\Check\Security\PendingUpdatesCheck</item>
+            </argument>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Calmfox\Watch\Model\PayloadProvider">
+        <arguments>
+            <argument name="healthChecks" xsi:type="object">Calmfox\Watch\Model\HealthRunner</argument>
+            <argument name="securityChecks" xsi:type="object">Calmfox\Watch\Model\SecurityRunner</argument>
+        </arguments>
+    </type>
+
+    <!-- ── Polecenia CLI: każda operacja z ekranu ma odpowiednik w konsoli ── -->
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="calmfox_watch_status" xsi:type="object">Calmfox\Watch\Console\Command\StatusCommand</item>
+                <item name="calmfox_watch_health" xsi:type="object">Calmfox\Watch\Console\Command\HealthCommand</item>
+                <item name="calmfox_watch_register" xsi:type="object">Calmfox\Watch\Console\Command\RegisterCommand</item>
+                <item name="calmfox_watch_pair" xsi:type="object">Calmfox\Watch\Console\Command\PairCommand</item>
+                <item name="calmfox_watch_disconnect" xsi:type="object">Calmfox\Watch\Console\Command\DisconnectCommand</item>
+                <item name="calmfox_watch_updates" xsi:type="object">Calmfox\Watch\Console\Command\UpdatesCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

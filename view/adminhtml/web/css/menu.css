@@ -1,0 +1,20 @@
+/*
+    Ikona pozycji „Calmfox Watch" w głównym pasku panelu. Magento rysuje ikony
+    pozycji pierwszego poziomu z własnego fontu ikon, więc dla naszej pozycji
+    podmieniamy zawartość na znak marki. Dwa selektory, bo Magento nadaje
+    pozycji zarówno data-ui-id, jak i klasę zbudowaną z członu po „::";
+    klasa sama w sobie jest zbyt ogólna, żeby na niej polegać.
+
+    To jest kosmetyka: gdyby któryś z selektorów przestał pasować po zmianie
+    motywu panelu, pozycja nadal działa, tylko bez znaku marki.
+*/
+.admin__menu > li[data-ui-id="menu-calmfox-watch-watch"] > a:before,
+.admin__menu > li.item-watch > a:before {
+    content: '';
+    display: block;
+    width: 2.4rem;
+    height: 2.4rem;
+    margin: 0 auto .3rem;
+    background: url('../images/mark.svg') no-repeat center center;
+    background-size: contain;
+}

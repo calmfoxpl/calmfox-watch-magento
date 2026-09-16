@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+    Moduł ładuje się po Magento_Backend (ekran w panelu), Magento_Store
+    (adres bazowy i widoki sklepu) oraz Magento_Cron (czytamy harmonogram
+    i dokładamy własne zadanie). Kolejność ma znaczenie tylko dla trasy panelu
+    i menu, ale bez niej Magento potrafi zbudować menu, zanim pozna nasz zasób.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Calmfox_Watch">
+        <sequence>
+            <module name="Magento_Backend"/>
+            <module name="Magento_Store"/>
+            <module name="Magento_Cron"/>
+        </sequence>
+    </module>
+</config>

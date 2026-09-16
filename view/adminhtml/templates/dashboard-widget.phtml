@@ -1,0 +1,111 @@
+<?php
+/**
+ * Kafelek kondycji na pulpicie panelu Magento.
+ *
+ * Style są własne i wąskie (prefiks .cfx-w-), bo moduł nie może zakładać, że
+ * panel ma akurat ten motyw administracyjny, co u nas w testach. Treść w całości
+ * pochodzi z payloadu wysyłanego do huba: kafelek ma mówić dokładnie to samo,
+ * co panel Calmfox, a nie własną wersję prawdy.
+ *
+ * @var \Calmfox\Watch\Block\Adminhtml\DashboardWidget $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+if (!$block->isVisible()) {
+    return;
+}
+$summary = $block->getSummary();
+$lastPoll = $block->getLastPollAt();
+$checks = $block->getChecks();
+$statusLabels = ['ok' => __('OK'), 'warn' => __('uwaga'), 'fail' => __('awaria')];
+?>
+<div class="cfx-widget">
+    <style>
+        .cfx-widget { border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem 1.25rem; margin: 0 0 1.5rem; background: #fff; }
+        .cfx-widget .cfx-w-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
+        .cfx-widget h2 { font-size: 1.05rem; margin: 0; }
+        .cfx-widget .cfx-w-badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+        .cfx-widget .cfx-w-ok { background: #dcfce7; color: #14532d; }
+        .cfx-widget .cfx-w-warn { background: #fef3c7; color: #78350f; }
+        .cfx-widget .cfx-w-fail { background: #fee2e2; color: #7f1d1d; }
+        .cfx-widget .cfx-w-note { color: #6b7280; font-size: .85rem; margin: .5rem 0 0; }
+        .cfx-widget ul { margin: .75rem 0 0; padding: 0; list-style: none; }
+        .cfx-widget li { padding: .4rem 0; border-top: 1px solid #f1f5f9; }
+        .cfx-widget li:first-child { border-top: 0; }
+        .cfx-widget .cfx-w-detail { color: #6b7280; font-size: .85rem; display: block; }
+        .cfx-widget .cfx-w-actions { margin-top: .75rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+        .cfx-widget .cfx-w-params { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+        .cfx-widget .cfx-w-param { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .55rem; border: 1px solid #e5e7eb; border-radius: 999px; font-size: .75rem; color: #374151; background: #f8fafc; }
+        .cfx-widget .cfx-w-dot { width: .5rem; height: .5rem; border-radius: 999px; display: inline-block; }
+        .cfx-widget .cfx-w-dot-ok { background: #16a34a; }
+        .cfx-widget .cfx-w-dot-warn { background: #d97706; }
+        .cfx-widget .cfx-w-dot-fail { background: #dc2626; }
+        .cfx-widget .cfx-w-plan { margin-top: .75rem; padding: .625rem .75rem; border-left: 3px solid #cbd5e1; background: #f8fafc; border-radius: 4px; }
+    </style>
+
+    <div class="cfx-w-head">
+        <h2><?= $escaper->escapeHtml(__('Calmfox Watch: kondycja sklepu')) ?></h2>
+        <?php if ($block->isConnected()): ?>
+            <span class="cfx-w-badge cfx-w-<?= $escaper->escapeHtmlAttr($summary['status']) ?>">
+                <?= $escaper->escapeHtml($statusLabels[$summary['status']] ?? $summary['status']) ?>
+            </span>
+        <?php endif; ?>
+    </div>
+
+    <?php if (!$block->isConnected()): ?>
+        <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Monitoring wnętrza sklepu nie jest jeszcze połączony z panelem. Sprawdzenia działają lokalnie, ale nikt o nich nie wie poza tym ekranem.')) ?></p>
+    <?php else: ?>
+        <p class="cfx-w-note">
+            <?= $escaper->escapeHtml(__('Sprawdzenia: %1 w porządku, %2 z ostrzeżeniem, %3 z awarią.', $summary['counts']['ok'], $summary['counts']['warn'], $summary['counts']['fail'])) ?>
+            <?php if (null !== $lastPoll): ?>
+                <?= $escaper->escapeHtml(__('Ostatnie odpytanie monitoringu: %1.', date('Y-m-d H:i', $lastPoll))) ?>
+            <?php endif; ?>
+        </p>
+
+        <?php if ([] === $summary['problems']): ?>
+            <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Nic nie wymaga uwagi.')) ?></p>
+        <?php else: ?>
+            <ul>
+                <?php foreach ($summary['problems'] as $problem): ?>
+                    <li>
+                        <span class="cfx-w-badge cfx-w-<?= $escaper->escapeHtmlAttr($problem['status']) ?>">
+                            <?= $escaper->escapeHtml($statusLabels[$problem['status']] ?? $problem['status']) ?>
+                        </span>
+                        <strong><?= $escaper->escapeHtml($problem['label'] ?? $problem['id']) ?></strong>
+                        <?php if (!empty($problem['detail'])): ?>
+                            <span class="cfx-w-detail"><?= $escaper->escapeHtml($problem['detail']) ?></span>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <?php $rest = $summary['total'] - count($summary['problems']); ?>
+            <?php if ($rest > 0): ?>
+                <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Dalszych spraw do przejrzenia: %1.', $rest)) ?></p>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ([] !== $checks): ?>
+            <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Parametry monitoringu w tym sklepie:')) ?></p>
+            <div class="cfx-w-params">
+                <?php foreach ($checks as $check): ?>
+                    <span class="cfx-w-param" title="<?= $escaper->escapeHtmlAttr($check['detail'] ?? '') ?>">
+                        <span class="cfx-w-dot cfx-w-dot-<?= $escaper->escapeHtmlAttr($check['status']) ?>"></span>
+                        <?= $escaper->escapeHtml($check['label'] ?? $check['id']) ?>
+                    </span>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($block->isFreePlan()): ?>
+            <div class="cfx-w-plan">
+                <span class="cfx-w-detail"><?= $escaper->escapeHtml(__('Sklep jest w pakiecie Free: sprawdzenia strony głównej i kontrola certyfikatu. Wyższy próg dokłada częstsze sondy, przegląd podstron i powiadomienia bez limitu.')) ?></span>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <p class="cfx-w-actions">
+        <a class="action-secondary" href="<?= $escaper->escapeUrl($block->getScreenUrl()) ?>"><?= $escaper->escapeHtml(__('Otwórz Calmfox Watch')) ?></a>
+        <?php if ($block->isConnected() && $block->isFreePlan()): ?>
+            <a class="action-primary" href="<?= $escaper->escapeUrl($block->getPlanUrl()) ?>" target="_blank" rel="noopener"><?= $escaper->escapeHtml(__('Zobacz pakiety')) ?></a>
+        <?php endif; ?>
+    </p>
+</div>

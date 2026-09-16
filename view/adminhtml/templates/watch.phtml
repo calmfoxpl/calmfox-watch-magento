@@ -1,0 +1,250 @@
+<?php
+/**
+ * Ekran Calmfox Watch w panelu Magento.
+ *
+ * Style są własne i wąskie (prefiks .cfx-), bo moduł nie może zakładać, że
+ * panel ma akurat ten motyw administracyjny, co u nas w testach. Wszystko,
+ * co pokazujemy, pochodzi z payloadu wysyłanego do huba: ekran ma mówić
+ * dokładnie to samo, co panel Calmfox, a nie własną wersję prawdy.
+ *
+ * @var \Calmfox\Watch\Block\Adminhtml\Watch $block
+ */
+$health = $block->getHealth();
+$security = $block->getSecurity();
+$state = $block->getState();
+$loopback = $block->getLoopback();
+$statusLabels = ['ok' => __('OK'), 'warn' => __('uwaga'), 'fail' => __('awaria')];
+$kindLabels = ['core' => __('platforma'), 'plugin' => __('pakiet'), 'theme' => __('motyw')];
+?>
+<div class="cfx-watch">
+    <style>
+        .cfx-watch { max-width: 1100px; }
+        .cfx-watch h1 { font-size: 1.7rem; margin: 0 0 .25rem; }
+        .cfx-watch h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+        .cfx-watch .cfx-version { color: #6b7280; font-size: .85rem; margin-bottom: 1rem; }
+        .cfx-watch .cfx-card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem 1.25rem; margin: 1rem 0; background: #fff; }
+        .cfx-watch .cfx-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .cfx-watch .cfx-grid > .cfx-card { flex: 1 1 320px; margin: 0; }
+        .cfx-watch .cfx-badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+        .cfx-watch .cfx-ok { background: #dcfce7; color: #14532d; }
+        .cfx-watch .cfx-warn { background: #fef3c7; color: #78350f; }
+        .cfx-watch .cfx-fail { background: #fee2e2; color: #7f1d1d; }
+        .cfx-watch table { width: 100%; border-collapse: collapse; }
+        .cfx-watch td, .cfx-watch th { padding: .5rem .4rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; text-align: left; }
+        .cfx-watch .cfx-detail { color: #6b7280; font-size: .85rem; }
+        .cfx-watch .cfx-plan-list { margin: .5rem 0 .75rem 1.1rem; list-style: disc; }
+        .cfx-watch .cfx-plan-list li { margin-bottom: .25rem; color: #374151; font-size: .9rem; }
+        .cfx-watch .cfx-fix { margin-top: .5rem; padding: .5rem .625rem; border-left: 3px solid #cbd5e1; background: #f8fafc; border-radius: 4px; }
+        .cfx-watch .cfx-fix-label { display: block; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin-bottom: .2rem; }
+        .cfx-watch .cfx-fix-command { display: block; margin-top: .4rem; padding: .4rem .5rem; background: #0f172a; color: #e2e8f0; border: 0; white-space: pre-wrap; word-break: break-all; user-select: all; }
+        .cfx-watch .cfx-ms { text-align: right; white-space: nowrap; color: #6b7280; font-size: .85rem; }
+        .cfx-watch code { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: .1rem .35rem; word-break: break-all; font-size: .8rem; }
+        .cfx-watch .cfx-note { padding: .75rem 1rem; border-radius: 8px; margin: .75rem 0; }
+        .cfx-watch .cfx-note-warning { background: #fef3c7; color: #78350f; }
+        .cfx-watch label { display: block; font-weight: 600; margin-bottom: .25rem; }
+        .cfx-watch input[type="text"], .cfx-watch input[type="email"] { width: 100%; max-width: 380px; padding: .45rem .6rem; border: 1px solid #cbd5e1; border-radius: 6px; }
+        .cfx-watch .cfx-actions { margin-top: .75rem; display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; }
+        .cfx-watch .cfx-actions form { margin: 0; }
+    </style>
+
+    <h1><?= $block->escapeHtml(__('Calmfox Watch')) ?></h1>
+    <p class="cfx-version"><?= $block->escapeHtml(__('wersja %1', $block->getVersion())) ?></p>
+
+    <?php if (!$loopback['ok']): ?>
+        <div class="cfx-note cfx-note-warning">
+            <?= $block->escapeHtml(__(
+                'Sprawdzenie wykonane z serwera nie dociera do adresu kontrolnego (%1). Jeżeli połączenie się nie powiedzie, sprawdź reguły serwera WWW i zaporę sieciową dla ścieżki /calmfox-watch/.',
+                $loopback['message']
+            )) ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!$block->isConnected()): ?>
+        <p><?= $block->escapeHtml(__('Monitoring wnętrza sklepu: dostępność usług (baza danych, poczta, dysk, kolejki, indeksy, wyszukiwarka), warunki złożenia zamówienia, podstawowe zasady bezpieczeństwa i historia zmian wersji. Wyniki znajdziesz w panelu Calmfox Watch.')) ?></p>
+
+        <?php if ($block->isConnectAvailable()): ?>
+            <div class="cfx-card">
+                <h2><?= $block->escapeHtml(__('Połącz przez watch.calmfox.net')) ?></h2>
+                <p class="cfx-detail"><?= $block->escapeHtml(__('Najkrótsza droga: zalogujesz się albo założysz konto w panelu, wybierzesz organizację, a my wrócimy tutaj i połączymy sklep sami.')) ?></p>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('connect')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <div class="cfx-actions">
+                        <button type="submit" class="action-primary"><?= $block->escapeHtml(__('Połącz przez Calmfox Watch')) ?></button>
+                    </div>
+                </form>
+            </div>
+        <?php endif; ?>
+
+        <div class="cfx-grid">
+            <div class="cfx-card">
+                <h2><?= $block->escapeHtml(__('Nie mam konta, załóż pakiet Free')) ?></h2>
+                <p class="cfx-detail"><?= $block->escapeHtml(__('Konto zakładamy od razu: monitoring dostępności sklepu, certyfikatu SSL i stanu usług. Bez hasła, logowanie linkiem wysyłanym na adres e-mail.')) ?></p>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('register')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <label for="cfx-email"><?= $block->escapeHtml(__('Adres e-mail właściciela')) ?></label>
+                    <input type="email" id="cfx-email" name="email" required>
+                    <p style="margin-top:.75rem;">
+                        <label style="font-weight:400;">
+                            <input type="checkbox" name="consent" value="1" required>
+                            <?= $block->escapeHtml(__('Zgadzam się na przekazanie adresu e-mail i domeny sklepu do Calmfox w celu założenia konta monitoringu.')) ?>
+                        </label>
+                    </p>
+                    <div class="cfx-actions">
+                        <button type="submit" class="action-primary"><?= $block->escapeHtml(__('Aktywuj pakiet Free')) ?></button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="cfx-card">
+                <h2><?= $block->escapeHtml(__('Mam już konto, połącz kluczem')) ?></h2>
+                <p class="cfx-detail"><?= $block->escapeHtml(__('Klucz instalacyjny znajdziesz na ekranie Integracje w panelu Calmfox Watch, przy stronie tego sklepu.')) ?></p>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('pair')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <label for="cfx-token"><?= $block->escapeHtml(__('Klucz instalacyjny')) ?></label>
+                    <input type="text" id="cfx-token" name="token" placeholder="fxp_live_…" required>
+                    <div class="cfx-actions">
+                        <button type="submit" class="action-secondary"><?= $block->escapeHtml(__('Połącz kluczem')) ?></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    <?php else: ?>
+        <div class="cfx-card">
+            <h2><?= $block->escapeHtml(__('Połączono z Calmfox Watch')) ?></h2>
+            <p>
+                <?= $block->escapeHtml(__('Sklep %1, pakiet %2.', $block->getDomain(), $state['plan'] ?? 'Free')) ?>
+                <?php $lastPoll = $block->getLastPollAt(); ?>
+                <?php if ($lastPoll !== null): ?>
+                    <?= $block->escapeHtml(__('Ostatnie odpytanie monitoringu: %1.', $block->formatMoment(gmdate('c', $lastPoll)))) ?>
+                <?php else: ?>
+                    <?= $block->escapeHtml(__('Monitoring jeszcze nie odpytał adresu kontrolnego, pierwsze sprawdzenie w ciągu kilku minut.')) ?>
+                <?php endif; ?>
+            </p>
+            <div class="cfx-actions">
+                <a class="action-primary" href="<?= $block->escapeUrl($block->getPanelSiteUrl()) ?>" target="_blank" rel="noopener"><?= $block->escapeHtml(__('Otwórz ten sklep w panelu')) ?></a>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('refresh')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <button type="submit" class="action-secondary"><?= $block->escapeHtml(__('Przelicz teraz')) ?></button>
+                </form>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('rotate')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <button type="submit" class="action-secondary"><?= $block->escapeHtml(__('Wymień klucz')) ?></button>
+                </form>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('disconnect')) ?>">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <button type="submit" class="action-secondary"><?= $block->escapeHtml(__('Rozłącz')) ?></button>
+                </form>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php /*
+        Pakiet sklepu. Zakup dzieje się w panelu (subskrypcja per strona), moduł tylko
+        prowadzi do właściwego miejsca w kontekście TEGO sklepu. Pakiet pokazujemy
+        z zastrzeżeniem, bo znamy go z chwili połączenia; źródłem prawdy jest panel.
+    */ ?>
+    <?php if ($block->isConnected()): ?>
+        <div class="cfx-card">
+            <?php if ($block->isFreePlan()): ?>
+                <h2><?= $block->escapeHtml(__('Pakiet Free, co dokłada wyższy próg')) ?></h2>
+                <p class="cfx-detail"><?= $block->escapeHtml(__('Na Free pilnujemy dostępności sklepu, certyfikatu i stanu usług. Wyższe pakiety dokładają to, czego Free nie obejmuje:')) ?></p>
+                <ul class="cfx-plan-list">
+                    <li><?= $block->escapeHtml(__('sondy co 30 do 60 sekund zamiast co 5 minut, awarię widać od razu, nie po kwadransie')) ?></li>
+                    <li><?= $block->escapeHtml(__('przegląd podstron: urwane treści, błędy 404 i zepsute odnośniki, zanim zauważy je klient')) ?></li>
+                    <li><?= $block->escapeHtml(__('monitoring wybranych podstron i ścieżki zakupowej, nie tylko strony głównej')) ?></li>
+                    <li><?= $block->escapeHtml(__('powiadomienia SMS-em, w komunikatorze i w aplikacji, bez miesięcznego limitu')) ?></li>
+                    <li><?= $block->escapeHtml(__('raporty okresowe i dłuższa historia zdarzeń')) ?></li>
+                </ul>
+                <div class="cfx-actions">
+                    <a class="action-primary" href="<?= $block->escapeUrl($block->getPlanUrl()) ?>" target="_blank" rel="noopener"><?= $block->escapeHtml(__('Zobacz pakiety dla tego sklepu')) ?></a>
+                </div>
+                <p class="cfx-detail"><?= $block->escapeHtml(__('Pakiet kupujesz w panelu, kartą, osobno dla każdej strony. Sklep może iść wyżej, a strona wizytówka zostać na Free.')) ?></p>
+            <?php else: ?>
+                <h2><?= $block->escapeHtml(__('Pakiet i płatności')) ?></h2>
+                <p><?= $block->escapeHtml(__('Ten sklep jest w pakiecie %1 (stan z chwili połączenia, bieżący pakiet i płatności zobaczysz w panelu).', ucfirst($block->getPlan()))) ?></p>
+                <div class="cfx-actions">
+                    <a class="action-secondary" href="<?= $block->escapeUrl($block->getPlanUrl()) ?>" target="_blank" rel="noopener"><?= $block->escapeHtml(__('Zarządzaj pakietem i płatnościami')) ?></a>
+                </div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="cfx-card">
+        <h2><?= $block->escapeHtml(__('Adres kontrolny')) ?></h2>
+        <p><code><?= $block->escapeHtml($block->getHealthUrl()) ?></code></p>
+        <p class="cfx-detail"><?= $block->escapeHtml(__('Ten adres odpytuje monitoring. Klucz w adresie jest jedynym zabezpieczeniem, więc nie publikuj go i nie wklejaj do zgłoszeń.')) ?></p>
+    </div>
+
+    <?php foreach ([[__('Stan usług'), $health, true], [__('Bezpieczeństwo'), $security, false]] as [$title, $payload, $withQuota]): ?>
+        <div class="cfx-card">
+            <h2>
+                <?= $block->escapeHtml($title) ?>
+                <span class="cfx-badge cfx-<?= $block->escapeHtmlAttr($payload['status']) ?>"><?= $block->escapeHtml($statusLabels[$payload['status']] ?? $payload['status']) ?></span>
+            </h2>
+            <?php if (empty($payload['checks'])): ?>
+                <p><?= $block->escapeHtml(__('Brak sprawdzeń do pokazania.')) ?></p>
+            <?php else: ?>
+                <table>
+                    <?php foreach ($payload['checks'] as $check): ?>
+                        <tr>
+                            <td style="width:6rem;"><span class="cfx-badge cfx-<?= $block->escapeHtmlAttr($check['status']) ?>"><?= $block->escapeHtml($statusLabels[$check['status']] ?? $check['status']) ?></span></td>
+                            <td>
+                                <strong><?= $block->escapeHtml($check['label'] ?? $check['id']) ?></strong>
+                                <?php if (!empty($check['detail'])): ?><br><span class="cfx-detail"><?= $block->escapeHtml($check['detail']) ?></span><?php endif; ?>
+                                <?php /* Konkret naprawczy: co ustawić i przykład do skopiowania. Polecenie
+                                          w osobnym bloku, bo zwykle idzie stąd prosto do terminala albo do
+                                          wiadomości do hostingodawcy. */ ?>
+                                <?php if (!empty($check['fix'])): ?>
+                                    <div class="cfx-fix">
+                                        <span class="cfx-fix-label"><?= $block->escapeHtml(__('Jak naprawić')) ?></span>
+                                        <span class="cfx-detail"><?= $block->escapeHtml($check['fix']) ?></span>
+                                        <?php if (!empty($check['command'])): ?>
+                                            <code class="cfx-fix-command"><?= $block->escapeHtml($check['command']) ?></code>
+                                            <span class="cfx-detail"><?= $block->escapeHtml(__('Przykład do wykonania na serwerze, w katalogu sklepu. Sprawdź go u siebie przed użyciem.')) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td class="cfx-ms"><?= $check['ms'] !== null ? $block->escapeHtml($check['ms'].' ms') : '' ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </table>
+            <?php endif; ?>
+
+            <?php if ($withQuota): ?>
+                <form method="post" action="<?= $block->escapeUrl($block->getActionUrl('quota')) ?>" style="margin-top:1rem;">
+                    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKeyValue()) ?>">
+                    <label for="cfx-quota"><?= $block->escapeHtml(__('Limit dysku na koncie hostingowym (GB)')) ?></label>
+                    <input type="text" inputmode="decimal" id="cfx-quota" name="quota" style="max-width:8rem;"
+                           value="<?= $block->getDiskQuotaGb() > 0 ? $block->escapeHtmlAttr((string) $block->getDiskQuotaGb()) : '' ?>" placeholder="20">
+                    <div class="cfx-actions">
+                        <button type="submit" class="action-secondary"><?= $block->escapeHtml(__('Zapisz limit')) ?></button>
+                    </div>
+                    <p class="cfx-detail"><?= $block->escapeHtml(__('Znajdziesz go w panelu hostingu albo w umowie. Zostaw puste, jeżeli nie wiesz: wtedy pokazujemy tylko rozmiar sklepu, bez zgadywania.')) ?></p>
+                </form>
+            <?php endif; ?>
+        </div>
+    <?php endforeach; ?>
+
+    <div class="cfx-card">
+        <h2><?= $block->escapeHtml(__('Historia zmian wersji')) ?></h2>
+        <p class="cfx-detail"><?= $block->escapeHtml(__('Zbierana od instalacji modułu przez porównywanie spisu pakietów. Znacznik czasu to moment wykrycia zmiany, nie moment wdrożenia.')) ?></p>
+        <?php $history = $block->getHistory(); ?>
+        <?php if (empty($history)): ?>
+            <p><?= $block->escapeHtml(__('Brak wpisów. Pierwszy pojawi się po najbliższym wdrożeniu.')) ?></p>
+        <?php else: ?>
+            <table>
+                <?php foreach ($history as $entry): ?>
+                    <tr>
+                        <td class="cfx-detail"><?= $block->escapeHtml($block->formatMoment($entry['at'] ?? null)) ?></td>
+                        <td>
+                            <strong><?= $block->escapeHtml($entry['name'] ?? '') ?></strong>
+                            <span class="cfx-detail">(<?= $block->escapeHtml($kindLabels[$entry['kind'] ?? ''] ?? ($entry['kind'] ?? '')) ?>)</span>
+                        </td>
+                        <td><?= $block->escapeHtml(trim((!empty($entry['from']) ? $entry['from'].' → ' : '').($entry['to'] ?? ''))) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>

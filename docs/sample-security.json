@@ -1,0 +1,153 @@
+{
+    "schema": 1,
+    "plugin": "1.0.0",
+    "status": "warn",
+    "checks": [
+        {
+            "id": "admin_count",
+            "status": "ok",
+            "label": "Liczba administratorów",
+            "detail": "Aktywnych kont w panelu: 4.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "admin_login",
+            "status": "ok",
+            "label": "Konta o domyślnym loginie",
+            "detail": "Brak kont o domyślnych loginach.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "admin_path",
+            "status": "warn",
+            "label": "Adres panelu administracyjnego",
+            "detail": "Panel stoi pod przewidywalnym adresem /admin. Automaty pukają do domyślnych adresów panelu nieprzerwanie, więc to najtańsza zmiana, jaką da się tu zrobić.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "two_factor",
+            "status": "ok",
+            "label": "Logowanie dwuskładnikowe (2FA)",
+            "detail": "Logowanie dwuskładnikowe do panelu jest włączone.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "app_mode",
+            "status": "ok",
+            "label": "Tryb pracy aplikacji",
+            "detail": "Tryb produkcyjny.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "debug_display",
+            "status": "ok",
+            "label": "Ujawnianie szczegółów błędów",
+            "detail": "Błędy nie są wyświetlane odwiedzającym.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "https",
+            "status": "ok",
+            "label": "Szyfrowanie HTTPS",
+            "detail": "HTTPS wymuszone w sklepie i w panelu.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "php_version",
+            "status": "warn",
+            "label": "Wersja PHP",
+            "detail": "PHP 8.2.20 dostaje już tylko poprawki bezpieczeństwa. Zaplanuj przejście wyżej.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "config_perms",
+            "status": "ok",
+            "label": "Uprawnienia plików konfiguracji",
+            "detail": "Sprawdzone pliki (2) nie są zapisywalne dla innych.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "dir_perms",
+            "status": "ok",
+            "label": "Uprawnienia katalogów",
+            "detail": "Katalogi zapisywalne wyłącznie dla właściciela.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "crypt_key",
+            "status": "ok",
+            "label": "Klucz szyfrujący",
+            "detail": "Klucz szyfrujący jest własny i odpowiednio długi.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "dev_packages",
+            "status": "ok",
+            "label": "Pakiety deweloperskie",
+            "detail": "Brak pakietów deweloperskich w wydaniu.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        },
+        {
+            "id": "pending_updates",
+            "status": "ok",
+            "label": "Zaległe aktualizacje",
+            "detail": "Pakietów do aktualizacji: 7.",
+            "fix": null,
+            "command": null,
+            "ms": null
+        }
+    ],
+    "history": [
+        {
+            "kind": "plugin",
+            "name": "vendor/platnosci-online",
+            "from": "3.4.1",
+            "to": "3.4.2",
+            "at": "2026-08-18T21:35:00+00:00",
+            "mode": "manual",
+            "by": null
+        },
+        {
+            "kind": "core",
+            "name": "magento/product-community-edition",
+            "from": "2.4.7-p2",
+            "to": "2.4.7-p3",
+            "at": "2026-08-18T21:35:00+00:00",
+            "mode": "manual",
+            "by": null
+        },
+        {
+            "kind": "core",
+            "name": "PHP",
+            "from": "8.1.29",
+            "to": "8.2.20",
+            "at": "2026-06-02T04:11:00+00:00",
+            "mode": "manual",
+            "by": null
+        }
+    ]
+}

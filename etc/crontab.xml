@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<!--
+    Jedno zadanie, tanie i bez sieci: nocne uzgodnienie migawki wersji pakietów,
+    żeby wdrożenie zrobione poza sklepem zostawiło ślad w historii nawet wtedy,
+    gdy hub akurat nie pytał o sekcję bezpieczeństwa.
+
+    Liczenia zaległych aktualizacji tu NIE MA świadomie: wymaga Composera
+    i wyjścia do sieci, więc idzie do crona systemowego jako
+    bin/magento calmfox:watch:updates.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+    <group id="default">
+        <job name="calmfox_watch_reconcile" instance="Calmfox\Watch\Cron\Reconcile" method="execute">
+            <schedule>17 4 * * *</schedule>
+        </job>
+    </group>
+</config>

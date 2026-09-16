@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+    Trasa panelu. Człon „calmfox_watch" w adresie jest częścią kontraktu
+    łączenia przez panel: adres powrotny musi nieść znacznik panelu tej
+    platformy, a w Magento prefiks panelu bywa dowolny (i słusznie), więc
+    to nasz własny człon jest jedyną stałą, po której panel pozna, że wraca
+    do ekranu administracyjnego, a nie pod dowolny adres sklepu.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="admin">
+        <route id="calmfox_watch" frontName="calmfox_watch">
+            <module name="Calmfox_Watch" before="Magento_Backend"/>
+        </route>
+    </router>
+</config>

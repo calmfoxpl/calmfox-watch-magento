@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+    Pozycja w GŁÓWNYM pasku panelu, zaraz za pulpitem, a nie w Sklepy → Ustawienia.
+    Monitoring schowany o dwa poziomy w konfiguracji ogląda wyłącznie ten, kto go
+    szuka, a ma go zobaczyć ktoś, kto wszedł do panelu po zamówieniach i właśnie
+    mija awarię. Ikona pozycji jest w view/adminhtml/web/css/menu.css.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Calmfox_Watch::watch"
+             title="Calmfox Watch"
+             translate="title"
+             module="Calmfox_Watch"
+             sortOrder="15"
+             action="calmfox_watch/watch/index"
+             resource="Calmfox_Watch::watch"/>
+    </menu>
+</config>

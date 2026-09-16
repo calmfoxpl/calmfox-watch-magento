@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!--
+    Kafelek kondycji na pulpicie panelu, PRZED wykresami sprzedaży: pulpit jest
+    pierwszym ekranem po zalogowaniu, więc awaria ma być widoczna, zanim ktoś
+    zacznie czytać słupki.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Calmfox\Watch\Block\Adminhtml\DashboardWidget"
+                   name="calmfox_watch.dashboard"
+                   template="Calmfox_Watch::dashboard-widget.phtml"
+                   before="-"/>
+        </referenceContainer>
+    </body>
+</page>

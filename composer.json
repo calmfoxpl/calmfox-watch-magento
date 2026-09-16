@@ -1,0 +1,50 @@
+{
+    "name": "calmfox/watch-magento",
+    "description": "Monitoring wnętrza sklepu Magento 2 dla Calmfox Watch: sekretny adres kontrolny ze stanem usług (baza, dysk, poczta, zadania cykliczne, indeksy, pamięć podręczna, ścieżka zakupowa, wyszukiwarka), podstawowa higiena bezpieczeństwa i historia zmian wersji pakietów.",
+    "type": "magento2-module",
+    "keywords": ["magento", "magento2", "magento2-module", "monitoring", "health", "uptime", "security"],
+    "license": "MIT",
+    "homepage": "https://watch.calmfox.net",
+    "authors": [
+        {
+            "name": "Calmfox",
+            "email": "kontakt@calmfox.pl",
+            "homepage": "https://calmfox.pl"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*",
+        "magento/framework": "^102.0 || ^103.0",
+        "magento/module-backend": "^100.4 || ^102.0",
+        "magento/module-store": "^100.4 || ^101.0",
+        "magento/module-cron": "^100.4",
+        "symfony/console": "^5.4 || ^6.0 || ^7.0",
+        "symfony/process": "^5.4 || ^6.0 || ^7.0",
+        "psr/log": "^1.1 || ^2.0 || ^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0 || ^12.0 || ^13.0"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Calmfox\\Watch\\": ""
+        },
+        "exclude-from-classmap": [
+            "tests/"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Calmfox\\Watch\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

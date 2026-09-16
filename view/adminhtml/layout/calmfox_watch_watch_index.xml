@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+    Ekran modułu w panelu. Jeden blok, własny szablon: nie budujemy tu siatki
+    (grid) ani formularza Magento, bo cała treść pochodzi z payloadu, który
+    i tak jedzie do huba, a im mniej warstw między payloadem a ekranem, tym
+    mniejsza szansa, że właściciel sklepu zobaczy co innego niż my w panelu.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-1column" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="content">
+            <block class="Calmfox\Watch\Block\Adminhtml\Watch" name="calmfox_watch.dashboard" template="Calmfox_Watch::watch.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+    Osobne uprawnienie, nie „System": ekran pokazuje stan wnętrza sklepu
+    i pozwala wymienić sekret adresu kontrolnego, więc rola z dostępem do
+    zamówień nie musi go widzieć.
+
+    Zasób siedzi wprost pod administracją, bo tak samo stoi pozycja w menu.
+    Identyfikator zasobu (Calmfox_Watch::watch) się nie zmienia, więc role,
+    które miały ten dostęp nadany, zachowują go po aktualizacji modułu.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Calmfox_Watch::watch" title="Calmfox Watch" translate="title" sortOrder="15"/>
+            </resource>
+        </resources>
+    </acl>
+</config>

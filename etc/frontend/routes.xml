@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+    Adres kontrolny MUSI być publiczny: to monitoring nas odpytuje, a nie
+    odwrotnie, i nie ma sesji, którą mógłby się wykazać. Autoryzacją jest
+    sekret w parametrze `key`, porównywany funkcją hash_equals.
+
+    Pełny adres: https://sklep.pl/calmfox-watch/health?key=<32 znaki hex>
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:App/etc/routes.xsd">
+    <router id="standard">
+        <route id="calmfox_watch" frontName="calmfox-watch">
+            <module name="Calmfox_Watch"/>
+        </route>
+    </router>
+</config>

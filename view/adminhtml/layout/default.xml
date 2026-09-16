@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<!--
+    Arkusz z ikoną menu musi być na KAŻDYM ekranie panelu, bo menu jest na
+    każdym ekranie. Poza ikoną nie dokładamy tu niczego: moduł monitoringu nie
+    ma prawa dokładać sobie stylów do cudzych widoków.
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Calmfox_Watch::css/menu.css"/>
+    </head>
+</page>
