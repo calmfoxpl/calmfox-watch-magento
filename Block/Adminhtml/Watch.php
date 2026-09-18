@@ -14,7 +14,6 @@ use Calmfox\Watch\Model\Version;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 use Magento\Backend\Model\UrlInterface as BackendUrl;
-use Magento\Framework\Data\Form\FormKey;
 
 /**
  * Dane ekranu Calmfox Watch w panelu Magento. Blok tylko zbiera to, co ma
@@ -33,7 +32,6 @@ class Watch extends Template
         private readonly HubClient $hub,
         private readonly PayloadProvider $payloads,
         private readonly UpdateHistory $history,
-        private readonly FormKey $formKey,
         private readonly BackendUrl $backendUrl,
         array $data = [],
     ) {
@@ -130,9 +128,15 @@ class Watch extends Template
         return \is_numeric($stored) ? (float) $stored : 0.0;
     }
 
+    /**
+     * Znacznika formularza NIE wstrzykujemy. Magento\Backend\Block\Template trzyma go
+     * już we własnym polu $formKey (bierze go z kontekstu bloku) i wystawia metodą
+     * getFormKey(). Własne pole o tej samej nazwie jest w PHP 8.3 błędem krytycznym
+     * („Cannot redeclare non-readonly property … as readonly”) i kładzie cały ekran.
+     */
     public function getFormKeyValue(): string
     {
-        return $this->formKey->getFormKey();
+        return (string) $this->getFormKey();
     }
 
     public function getActionUrl(string $action): string

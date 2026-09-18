@@ -10,7 +10,7 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Backend\Model\View\Result\PageFactory;
+use Magento\Framework\View\Result\PageFactory;
 
 /**
  * Ekran Calmfox Watch w panelu Magento. Renderowanie jest w bloku, tutaj
@@ -51,8 +51,16 @@ class Index extends Action implements HttpGetActionInterface
             return $redirect->setPath('calmfox_watch/watch/index');
         }
 
-        // Fabryka strony z przestrzeni Backend, nie Framework: tylko wynik
-        // backendowy zna setActiveMenu(), czyli podświetlenie pozycji w menu.
+        // Fabryka z przestrzeni Framework, choć potrzebujemy wyniku BACKENDOWEGO
+        // (tylko on zna setActiveMenu). To nie jest pomyłka i nie wolno tego
+        // „poprawić" na Backend\Model\View\Result\PageFactory: w obszarze
+        // adminhtml Magento przestawia tę właśnie fabrykę na klasę backendową
+        // (Magento_Backend/etc/adminhtml/di.xml) i przy okazji wstrzykuje
+        // pageConfigRenderPool oraz szablon Magento_Theme::root.phtml. Sięgnięcie
+        // po fabrykę backendową wprost omija tę konfigurację: strona powstaje bez
+        // kontenerów panelu, więc setActiveMenu() nie znajduje bloku „menu”
+        // i cały ekran kończy się błędem. Tak samo robi to rdzeń Magento.
+        /** @var \Magento\Backend\Model\View\Result\Page $page */
         $page = $this->pageFactory->create();
         $page->setActiveMenu('Calmfox_Watch::watch');
         $page->getConfig()->getTitle()->prepend(__('Calmfox Watch'));

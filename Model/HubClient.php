@@ -23,6 +23,13 @@ class HubClient
     private const DISCONNECT_TIMEOUT = 8;
     private const LOOPBACK_TIMEOUT = 5;
 
+    /**
+     * Ocena jedzie z gotowej migawki, więc hub odpowiada od razu i nie puka do nas.
+     * Limit jest krótki celowo: to jedyne wyjście do sieci podczas RYSOWANIA ekranu,
+     * a panel administracyjny nie ma prawa wisieć, kiedy hub milczy.
+     */
+    private const SCORE_TIMEOUT = 8;
+
     public function __construct(
         private readonly ClientInterface $httpClient,
         private readonly ClientInterface $loopbackClient,
@@ -212,6 +219,26 @@ class HubClient
      *
      * @return array{ok: bool, message: string, data: array<string, mixed>}
      */
+    /**
+     * Kondycja sklepu z panelu: jedna liczba 0–100 i podwyniki obszarów.
+     *
+     * To JEDYNE miejsce, w którym moduł pyta hub o coś dla siebie. Reszta kontraktu jest
+     * pull — hub odpytuje nas — ale ocena powstaje po jego stronie (bierze pod uwagę uptime,
+     * przeglądy podstron i pomiary wydajności, o których sklep nie ma pojęcia), więc musi
+     * przyjechać stąd. Buforowaniem zajmuje się ScoreProvider, nie ta metoda.
+     *
+     * @return array{ok: bool, message: string, data: array<string, mixed>}
+     */
+    public function score(): array
+    {
+        $token = (string) $this->state->get('installToken', '');
+        if ('' === $token) {
+            return ['ok' => false, 'message' => 'Sklep nie jest połączony z Calmfox Watch.', 'data' => []];
+        }
+
+        return $this->call('/api/public/plugin/score', ['token' => $token], 200, self::SCORE_TIMEOUT);
+    }
+
     private function call(string $path, array $body, int $expected, int $timeout): array
     {
         try {

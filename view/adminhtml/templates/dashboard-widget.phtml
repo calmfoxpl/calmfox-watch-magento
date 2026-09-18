@@ -2,10 +2,15 @@
 /**
  * Kafelek kondycji na pulpicie panelu Magento.
  *
- * Style są własne i wąskie (prefiks .cfx-w-), bo moduł nie może zakładać, że
- * panel ma akurat ten motyw administracyjny, co u nas w testach. Treść w całości
- * pochodzi z payloadu wysyłanego do huba: kafelek ma mówić dokładnie to samo,
- * co panel Calmfox, a nie własną wersję prawdy.
+ * Kafelek NIE tłumaczy sprawdzeń. Na pulpicie ma zadziałać jedno spojrzenie: pierścień,
+ * trzy liczby i nazwy tego, co się psuje. Po „dlaczego" i „jak naprawić" prowadzą dwa
+ * przyciski — ekran modułu i panel Calmfox Watch — bo tam te opisy są do czytania,
+ * a nie do mijania w drodze do zamówień.
+ *
+ * Rozmiary są w rem na skali PANELU: Magento ustawia `html { font-size: 62.5% }`, więc
+ * 1rem = 10px, a liczby na pulpicie mają 2.4rem przy wadze 600, etykiety 1.3rem przy 700
+ * (`.dashboard-totals-value`, `.dashboard-totals-label`). Kroju NIE ustawiamy: dziedziczy
+ * się Open Sans panelu, więc kafelek nie odstaje od sąsiednich bloków.
  *
  * @var \Calmfox\Watch\Block\Adminhtml\DashboardWidget $block
  * @var \Magento\Framework\Escaper $escaper
@@ -15,97 +20,234 @@ if (!$block->isVisible()) {
 }
 $summary = $block->getSummary();
 $lastPoll = $block->getLastPollAt();
-$checks = $block->getChecks();
+$score = $block->getScore();
 $statusLabels = ['ok' => __('OK'), 'warn' => __('uwaga'), 'fail' => __('awaria')];
 ?>
 <div class="cfx-widget">
     <style>
-        .cfx-widget { border: 1px solid #e5e7eb; border-radius: 10px; padding: 1rem 1.25rem; margin: 0 0 1.5rem; background: #fff; }
-        .cfx-widget .cfx-w-head { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; justify-content: space-between; }
-        .cfx-widget h2 { font-size: 1.05rem; margin: 0; }
-        .cfx-widget .cfx-w-badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
-        .cfx-widget .cfx-w-ok { background: #dcfce7; color: #14532d; }
-        .cfx-widget .cfx-w-warn { background: #fef3c7; color: #78350f; }
-        .cfx-widget .cfx-w-fail { background: #fee2e2; color: #7f1d1d; }
-        .cfx-widget .cfx-w-note { color: #6b7280; font-size: .85rem; margin: .5rem 0 0; }
-        .cfx-widget ul { margin: .75rem 0 0; padding: 0; list-style: none; }
-        .cfx-widget li { padding: .4rem 0; border-top: 1px solid #f1f5f9; }
-        .cfx-widget li:first-child { border-top: 0; }
-        .cfx-widget .cfx-w-detail { color: #6b7280; font-size: .85rem; display: block; }
-        .cfx-widget .cfx-w-actions { margin-top: .75rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
-        .cfx-widget .cfx-w-params { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
-        .cfx-widget .cfx-w-param { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .55rem; border: 1px solid #e5e7eb; border-radius: 999px; font-size: .75rem; color: #374151; background: #f8fafc; }
-        .cfx-widget .cfx-w-dot { width: .5rem; height: .5rem; border-radius: 999px; display: inline-block; }
-        .cfx-widget .cfx-w-dot-ok { background: #16a34a; }
-        .cfx-widget .cfx-w-dot-warn { background: #d97706; }
-        .cfx-widget .cfx-w-dot-fail { background: #dc2626; }
-        .cfx-widget .cfx-w-plan { margin-top: .75rem; padding: .625rem .75rem; border-left: 3px solid #cbd5e1; background: #f8fafc; border-radius: 4px; }
+        .cfx-widget { border: 1px solid #d6d6d6; border-radius: 3px; padding: 2rem 2.5rem; margin: 0 0 2rem; background: #fff; }
+        .cfx-widget .cfx-head { display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; justify-content: space-between; margin-bottom: 1.5rem; }
+        .cfx-widget .cfx-title { font-size: 1.8rem; font-weight: 600; margin: 0; color: #303030; }
+        .cfx-widget .cfx-badge { display: inline-block; padding: .3rem 1rem; border-radius: 1.2rem; font-size: 1.1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+        .cfx-widget .cfx-ok { background: #e5f6e5; color: #006400; }
+        .cfx-widget .cfx-warn { background: #fdf0d5; color: #6f4400; }
+        .cfx-widget .cfx-fail { background: #fae5e5; color: #a02020; }
+
+        .cfx-widget .cfx-body { display: flex; flex-wrap: wrap; gap: 3rem; align-items: flex-start; }
+        .cfx-widget .cfx-ring { flex: 0 0 auto; width: 200px; max-width: 45vw; }
+        .cfx-widget .cfx-ring svg { display: block; width: 100%; height: auto; }
+        /* Liczby wewnątrz rysunku są w jednostkach pola (220), nie w rem: SVG skaluje się
+           do szerokości kolumny, więc rem dawałby inny rozmiar przy każdej szerokości. */
+        .cfx-widget .cfx-ring-value { font-size: 56px; font-weight: 600; }
+        .cfx-widget .cfx-ring-scale { font-size: 19px; fill: #707070; }
+        .cfx-widget .cfx-rest { flex: 1 1 320px; min-width: 0; }
+
+        .cfx-widget .cfx-counts { display: flex; flex-wrap: wrap; gap: 3rem; margin: 0 0 2rem; }
+        .cfx-widget .cfx-count b { display: block; font-size: 2.4rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+        .cfx-widget .cfx-count span { display: block; font-size: 1.3rem; font-weight: 700; color: #707070; }
+        .cfx-widget .cfx-count-ok b { color: #006400; }
+        .cfx-widget .cfx-count-warn b { color: #6f4400; }
+        .cfx-widget .cfx-count-fail b { color: #a02020; }
+        /* Zero uwag i zero awarii przygaszamy: zero nie jest wiadomością, tylko jej brakiem. */
+        .cfx-widget .cfx-count-zero b { color: #a6a6a6; }
+
+        .cfx-widget .cfx-problems { margin: 0; padding: 0; list-style: none; }
+        .cfx-widget .cfx-problems li { display: flex; flex-wrap: wrap; gap: 1rem; align-items: baseline; padding: .9rem 0; border-top: 1px solid #ededed; font-size: 1.4rem; }
+        .cfx-widget .cfx-problems li:first-child { border-top: 0; }
+        .cfx-widget .cfx-problems strong { font-weight: 600; color: #303030; }
+        .cfx-widget .cfx-more { margin: 1rem 0 0; font-size: 1.3rem; color: #707070; }
+
+        .cfx-widget .cfx-areas { display: flex; flex-wrap: wrap; gap: .8rem 2rem; margin: 2rem 0 0; padding: 0; list-style: none; font-size: 1.3rem; }
+        .cfx-widget .cfx-areas li { display: inline-flex; align-items: center; gap: .6rem; color: #303030; }
+        .cfx-widget .cfx-dot { width: 1rem; height: 1rem; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+        .cfx-widget .cfx-areas b { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        /* Zachęta do progu płatnego. Stoi na miejscu, w którym na Free nie ma oceny,
+           więc mówi o tym, czego tam brakuje — a nie o cenniku w oderwaniu od ekranu. */
+        .cfx-widget .cfx-upsell { border-left: 3px solid #eb5202; background: #fcf6f2; padding: 1.5rem 2rem; border-radius: 0 3px 3px 0; }
+        .cfx-widget .cfx-upsell h3 { font-size: 1.6rem; font-weight: 600; margin: 0 0 .8rem; color: #303030; }
+        .cfx-widget .cfx-upsell ul { margin: 0 0 1.5rem; padding: 0; list-style: none; font-size: 1.4rem; }
+        .cfx-widget .cfx-upsell li { padding: .3rem 0 .3rem 2rem; position: relative; color: #303030; }
+        .cfx-widget .cfx-upsell li:before { content: '+'; position: absolute; left: .4rem; color: #eb5202; font-weight: 700; }
+        .cfx-widget .cfx-actions { display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; margin: 2.5rem 0 0; }
+        .cfx-widget .cfx-poll { font-size: 1.2rem; color: #a6a6a6; margin: 1.5rem 0 0; }
     </style>
 
-    <div class="cfx-w-head">
-        <h2><?= $escaper->escapeHtml(__('Calmfox Watch: kondycja sklepu')) ?></h2>
+    <div class="cfx-head">
+        <h2 class="cfx-title"><?= $escaper->escapeHtml(__('Calmfox Watch: kondycja sklepu')) ?></h2>
         <?php if ($block->isConnected()): ?>
-            <span class="cfx-w-badge cfx-w-<?= $escaper->escapeHtmlAttr($summary['status']) ?>">
+            <span class="cfx-badge cfx-<?= $escaper->escapeHtmlAttr($summary['status']) ?>">
                 <?= $escaper->escapeHtml($statusLabels[$summary['status']] ?? $summary['status']) ?>
             </span>
         <?php endif; ?>
     </div>
 
     <?php if (!$block->isConnected()): ?>
-        <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Monitoring wnętrza sklepu nie jest jeszcze połączony z panelem. Sprawdzenia działają lokalnie, ale nikt o nich nie wie poza tym ekranem.')) ?></p>
+        <?php /* Pierścień zastępczy pokazuje KSZTAŁT tego, co dochodzi po połączeniu —
+                 i nie udaje pomiaru: same tory, bez liczby. */ ?>
+        <div class="cfx-body">
+            <div class="cfx-ring">
+                <svg viewBox="0 0 220 220" aria-hidden="true">
+                    <?php foreach (\Calmfox\Watch\Core\ScoreRing::placeholder() as $seg): ?>
+                        <path d="<?= $escaper->escapeHtmlAttr($seg['d']) ?>" fill="none" stroke="#e8e8e8"
+                              stroke-width="22" stroke-linecap="round" stroke-dasharray="2 7" />
+                    <?php endforeach; ?>
+                </svg>
+            </div>
+            <div class="cfx-rest">
+                <div class="cfx-upsell">
+                    <h3><?= $escaper->escapeHtml(__('Sprawdzenia już działają — ale wie o nich tylko ten ekran')) ?></h3>
+                    <ul>
+                        <li><?= $escaper->escapeHtml(__('wiadomość o awarii, zanim zadzwoni pierwszy klient')) ?></li>
+                        <li><?= $escaper->escapeHtml(__('historia zmian wersji — co się zmieniło tuż przed awarią')) ?></li>
+                        <li><?= $escaper->escapeHtml(__('kondycja sklepu jedną liczbą, z pięciu obszarów')) ?></li>
+                    </ul>
+                    <a class="action-primary" href="<?= $escaper->escapeUrl($block->getScreenUrl()) ?>">
+                        <?= $escaper->escapeHtml(__('Połącz sklep — pakiet Free bez hasła')) ?>
+                    </a>
+                </div>
+            </div>
+        </div>
     <?php else: ?>
-        <p class="cfx-w-note">
-            <?= $escaper->escapeHtml(__('Sprawdzenia: %1 w porządku, %2 z ostrzeżeniem, %3 z awarią.', $summary['counts']['ok'], $summary['counts']['warn'], $summary['counts']['fail'])) ?>
-            <?php if (null !== $lastPoll): ?>
-                <?= $escaper->escapeHtml(__('Ostatnie odpytanie monitoringu: %1.', date('Y-m-d H:i', $lastPoll))) ?>
+        <?php
+        /*
+         * Pierścień: najpierw wszystkie tory („ile mogło być"), potem wypełnienia na
+         * wierzchu — inaczej łuk sąsiada przykrywałby początek następnego. Geometrię
+         * liczy ScoreRing, tu zostaje samo rysowanie, bez JavaScriptu.
+         */
+        $ring = null !== $score && \is_array($score['ring'] ?? null) ? $score['ring'] : [];
+        $tone = null !== $score ? (string) ($score['tone'] ?? 'muted') : 'muted';
+        $toneFill = ['ok' => '#006400', 'warn' => '#6f4400', 'bad' => '#a02020'][$tone] ?? '#303030';
+        ?>
+        <div class="cfx-body">
+            <?php if ([] === $ring): ?>
+                <?php /* Free: oceny nie ma, więc jej miejsce zajmuje tor bez wypełnienia. */ ?>
+                <div class="cfx-ring">
+                    <svg viewBox="0 0 220 220" aria-hidden="true">
+                        <?php foreach (\Calmfox\Watch\Core\ScoreRing::placeholder() as $seg): ?>
+                            <path d="<?= $escaper->escapeHtmlAttr($seg['d']) ?>" fill="none" stroke="#e8e8e8"
+                                  stroke-width="22" stroke-linecap="round" stroke-dasharray="2 7" />
+                        <?php endforeach; ?>
+                    </svg>
+                </div>
+            <?php else: ?>
+                <div class="cfx-ring">
+                    <svg viewBox="0 0 220 220" role="img"
+                         aria-label="<?= $escaper->escapeHtmlAttr(__('Kondycja sklepu: %1 na 100.', $score['overall'])) ?>">
+                        <?php foreach ($ring as $seg): ?>
+                            <?php /* Obszar niezmierzony ma tor kreskowany: od razu widać, że tam nie mierzymy. */ ?>
+                            <path d="<?= $escaper->escapeHtmlAttr($seg['d']) ?>" fill="none" stroke="#e8e8e8"
+                                  stroke-width="22" stroke-linecap="round"<?= $seg['measured'] ? '' : ' stroke-dasharray="2 7"' ?> />
+                        <?php endforeach; ?>
+                        <?php foreach ($ring as $seg): ?>
+                            <?php if ($seg['fill'] > 0): ?>
+                                <path d="<?= $escaper->escapeHtmlAttr($seg['d']) ?>" fill="none"
+                                      stroke="<?= $escaper->escapeHtmlAttr($seg['color']) ?>" stroke-width="22"
+                                      stroke-linecap="round"
+                                      stroke-dasharray="<?= $escaper->escapeHtmlAttr((string) $seg['fill']) ?> <?= $escaper->escapeHtmlAttr((string) ($seg['length'] + 1)) ?>" />
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php /* Liczba i skala w DWÓCH wierszach: jeden wiersz „100 na 100" centruje się
+                                jako całość, więc sama liczba uciekałaby w lewo od środka pierścienia. */ ?>
+                        <text x="110" y="116" text-anchor="middle" class="cfx-ring-value"
+                              fill="<?= $escaper->escapeHtmlAttr($toneFill) ?>"><?= $escaper->escapeHtml((string) $score['overall']) ?></text>
+                        <text x="110" y="142" text-anchor="middle" class="cfx-ring-scale"><?= $escaper->escapeHtml(__('na 100')) ?></text>
+                    </svg>
+                </div>
             <?php endif; ?>
-        </p>
 
-        <?php if ([] === $summary['problems']): ?>
-            <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Nic nie wymaga uwagi.')) ?></p>
-        <?php else: ?>
-            <ul>
-                <?php foreach ($summary['problems'] as $problem): ?>
-                    <li>
-                        <span class="cfx-w-badge cfx-w-<?= $escaper->escapeHtmlAttr($problem['status']) ?>">
-                            <?= $escaper->escapeHtml($statusLabels[$problem['status']] ?? $problem['status']) ?>
+            <div class="cfx-rest">
+                <div class="cfx-counts">
+                    <?php foreach ([
+                        ['ok', __('w porządku'), 'cfx-count-ok'],
+                        ['warn', __('uwagi'), 'cfx-count-warn'],
+                        ['fail', __('awarie'), 'cfx-count-fail'],
+                    ] as [$key, $label, $class]): ?>
+                        <?php $howMany = (int) ($summary['counts'][$key] ?? 0); ?>
+                        <span class="cfx-count <?= $escaper->escapeHtmlAttr($class) ?><?= 0 === $howMany ? ' cfx-count-zero' : '' ?>">
+                            <b><?= $escaper->escapeHtml((string) $howMany) ?></b>
+                            <span><?= $escaper->escapeHtml($label) ?></span>
                         </span>
-                        <strong><?= $escaper->escapeHtml($problem['label'] ?? $problem['id']) ?></strong>
-                        <?php if (!empty($problem['detail'])): ?>
-                            <span class="cfx-w-detail"><?= $escaper->escapeHtml($problem['detail']) ?></span>
-                        <?php endif; ?>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-            <?php $rest = $summary['total'] - count($summary['problems']); ?>
-            <?php if ($rest > 0): ?>
-                <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Dalszych spraw do przejrzenia: %1.', $rest)) ?></p>
-            <?php endif; ?>
-        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
 
-        <?php if ([] !== $checks): ?>
-            <p class="cfx-w-note"><?= $escaper->escapeHtml(__('Parametry monitoringu w tym sklepie:')) ?></p>
-            <div class="cfx-w-params">
-                <?php foreach ($checks as $check): ?>
-                    <span class="cfx-w-param" title="<?= $escaper->escapeHtmlAttr($check['detail'] ?? '') ?>">
-                        <span class="cfx-w-dot cfx-w-dot-<?= $escaper->escapeHtmlAttr($check['status']) ?>"></span>
-                        <?= $escaper->escapeHtml($check['label'] ?? $check['id']) ?>
-                    </span>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
+                <?php if ([] === $summary['problems']): ?>
+                    <p><?= $escaper->escapeHtml(__('Nic nie wymaga uwagi.')) ?></p>
+                <?php else: ?>
+                    <?php /* Same nazwy, bez opisów: kafelek mówi CO, a nie dlaczego. */ ?>
+                    <ul class="cfx-problems">
+                        <?php foreach ($summary['problems'] as $problem): ?>
+                            <li>
+                                <span class="cfx-badge cfx-<?= $escaper->escapeHtmlAttr($problem['status']) ?>">
+                                    <?= $escaper->escapeHtml($statusLabels[$problem['status']] ?? $problem['status']) ?>
+                                </span>
+                                <strong><?= $escaper->escapeHtml($problem['label'] ?? $problem['id']) ?></strong>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php $rest = $summary['total'] - count($summary['problems']); ?>
+                    <?php if ($rest > 0): ?>
+                        <p class="cfx-more"><?= $escaper->escapeHtml(__('i %1 dalszych na ekranie modułu', $rest)) ?></p>
+                    <?php endif; ?>
+                <?php endif; ?>
 
-        <?php if ($block->isFreePlan()): ?>
-            <div class="cfx-w-plan">
-                <span class="cfx-w-detail"><?= $escaper->escapeHtml(__('Sklep jest w pakiecie Free: sprawdzenia strony głównej i kontrola certyfikatu. Wyższy próg dokłada częstsze sondy, przegląd podstron i powiadomienia bez limitu.')) ?></span>
+                <?php if ([] !== $ring): ?>
+                    <ul class="cfx-areas">
+                        <?php foreach ($ring as $seg): ?>
+                            <li>
+                                <span class="cfx-dot" style="background: <?= $escaper->escapeHtmlAttr($seg['measured'] ? $seg['color'] : '#cccccc') ?>"></span>
+                                <?= $escaper->escapeHtml($seg['label']) ?>
+                                <b><?= $escaper->escapeHtml($seg['measured'] ? (string) $seg['score'] : '—') ?></b>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <?php if ([] === $ring): ?>
+                    <?php
+                    /*
+                     * Zachęta stoi TU, obok pustego pierścienia, a nie w oderwaniu od ekranu:
+                     * klient widzi dokładnie to miejsce, w którym oceny brakuje. Korzyści są
+                     * sprawdzalne w kodzie huba, nie wymyślone — sonda na Free chodzi co 300 s,
+                     * na Start co 60 s (PlanTier::probeIntervalSeconds), a ocena i dobowe
+                     * raporty wchodzą od Start (PlanGuard::showsScore, showsSnapshots).
+                     * Ceny w pakiecie NIE MA świadomie: cennik się zmienia, a wersje wtyczki
+                     * zostają u klientów na długo.
+                     */
+                    ?>
+                    <div class="cfx-upsell">
+                        <h3><?= $escaper->escapeHtml(__('Kondycja sklepu wchodzi od pakietu Start')) ?></h3>
+                        <ul>
+                            <li><?= $escaper->escapeHtml(__('ocena 0–100 z pięciu obszarów — ta, której miejsce widzisz obok')) ?></li>
+                            <li><?= $escaper->escapeHtml(__('sprawdzenia co minutę zamiast co pięć')) ?></li>
+                            <li><?= $escaper->escapeHtml(__('dobowe raporty: co się zmieniło i kiedy')) ?></li>
+                        </ul>
+                        <a class="action-primary" href="<?= $escaper->escapeUrl($block->getPlanUrl()) ?>" target="_blank" rel="noopener">
+                            <?= $escaper->escapeHtml(__('Zobacz, co dokłada wyższy próg')) ?>
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
-        <?php endif; ?>
+        </div>
     <?php endif; ?>
 
-    <p class="cfx-w-actions">
-        <a class="action-secondary" href="<?= $escaper->escapeUrl($block->getScreenUrl()) ?>"><?= $escaper->escapeHtml(__('Otwórz Calmfox Watch')) ?></a>
-        <?php if ($block->isConnected() && $block->isFreePlan()): ?>
-            <a class="action-primary" href="<?= $escaper->escapeUrl($block->getPlanUrl()) ?>" target="_blank" rel="noopener"><?= $escaper->escapeHtml(__('Zobacz pakiety')) ?></a>
+    <?php /* Dwa wyjścia i nic więcej: szczegóły sprawdzeń są na ekranie modułu, historia
+            i incydenty w panelu. Kafelek ma do nich prowadzić, nie je zastępować. */ ?>
+    <div class="cfx-actions">
+        <a class="action-default" href="<?= $escaper->escapeUrl($block->getScreenUrl()) ?>">
+            <?= $escaper->escapeHtml(__('Otwórz Calmfox Watch')) ?>
+        </a>
+        <?php if ($block->isConnected()): ?>
+            <?php /* Podpis jest STAŁY, a host siedzi w adresie i w tytule: „Panel localhost"
+                     na środowisku testowym czyta się jak awaria, a nie jak nazwa panelu. */ ?>
+            <a class="action-primary" href="<?= $escaper->escapeUrl($block->getPanelSiteUrl()) ?>"
+               title="<?= $escaper->escapeHtmlAttr($block->getPanelHost()) ?>" target="_blank" rel="noopener">
+                <?= $escaper->escapeHtml(__('Panel Calmfox Watch')) ?>
+            </a>
         <?php endif; ?>
-    </p>
+    </div>
+
+    <?php if ($block->isConnected() && null !== $lastPoll): ?>
+        <p class="cfx-poll"><?= $escaper->escapeHtml(__('Ostatnie odpytanie monitoringu: %1', date('Y-m-d H:i', $lastPoll))) ?></p>
+    <?php endif; ?>
 </div>

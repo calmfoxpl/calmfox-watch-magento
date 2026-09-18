@@ -8,6 +8,7 @@ use Calmfox\Watch\Core\PlanState;
 use Calmfox\Watch\Core\StateStore;
 use Calmfox\Watch\Core\StatusSummary;
 use Calmfox\Watch\Model\HubClient;
+use Calmfox\Watch\Model\ScoreProvider;
 use Calmfox\Watch\Model\PayloadProvider;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
@@ -33,6 +34,7 @@ class DashboardWidget extends Template
         private readonly StateStore $state,
         private readonly PayloadProvider $payloads,
         private readonly HubClient $hub,
+        private readonly ScoreProvider $score,
         private readonly BackendUrl $backendUrl,
         array $data = [],
     ) {
@@ -102,6 +104,31 @@ class DashboardWidget extends Template
         $last = (int) $this->state->get('lastPollAt', 0);
 
         return $last > 0 ? $last : null;
+    }
+
+    /**
+     * Ocena z panelu albo null, gdy jej nie ma: brak połączenia, próg Free (na nim hub
+     * nie wydaje żadnej liczby o stanie sklepu) albo jeszcze nie policzono. Kafelek chowa
+     * wtedy pierścień w całości — pusty okrąg z zerem kłamałby o stanie sklepu, bo zero
+     * jest w tej skali najgorszym wynikiem, a nie brakiem wyniku.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getScore(): ?array
+    {
+        return $this->isConnected() ? $this->score->get() : null;
+    }
+
+    /** Adres tego sklepu w panelu Calmfox Watch: drugie CTA kafelka. */
+    public function getPanelSiteUrl(): string
+    {
+        return $this->hub->panelLink('/app/dashboard');
+    }
+
+    /** Host panelu do podpisu przycisku — bez schematu i bez ścieżki. */
+    public function getPanelHost(): string
+    {
+        return (string) parse_url($this->hub->panelUrl(), \PHP_URL_HOST);
     }
 
     public function getScreenUrl(): string
