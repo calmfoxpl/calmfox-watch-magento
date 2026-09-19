@@ -10,7 +10,7 @@ use Magento\Framework\Module\ModuleListInterface;
 
 /**
  * Skład WŁĄCZONYCH modułów sklepu. To jest magentowy odpowiednik listy
- * aktywnych wtyczek WordPressa (WTYCZKI.md, sekcja 2): moduł leżący w
+ * aktywnych wtyczek WordPressa: moduł leżący w
  * app/code albo w vendorze, ale wyłączony w config.php, nie działa i nie
  * ma prawa liczyć się jako włączony.
  *

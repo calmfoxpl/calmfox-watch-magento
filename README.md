@@ -1,34 +1,53 @@
-# Calmfox Watch dla Magento 2
+# Calmfox Watch for Magento 2
 
-Moduł monitoringu wnętrza sklepu Magento. Wystawia jeden sekretny adres
-kontrolny, który odpytuje monitoring Calmfox Watch, i realizuje ten sam
-kontrakt, co wtyczka WordPressa oraz pakiety dla Neosa i Syliusa
-(`WTYCZKI.md` w repozytorium Calmfox Watch): ten sam kształt odpowiedzi,
-ten sam podpis, ta sama droga parowania.
+**English** · [Polski](README.pl.md)
 
-Model jest „pull": moduł nie wysyła nic z siebie poza rejestracją, parowaniem
-i rozłączeniem. Reszta to odpowiedzi na pytania monitoringu.
+A module that monitors a Magento store from the inside. It exposes a single
+secret health endpoint, which Calmfox Watch monitoring polls, and implements
+the same contract as the WordPress plugin and the Neos and Sylius packages:
+the same response shape, the same signature, the same pairing flow.
 
-## Wymagania
+The model is "pull": the module sends nothing on its own apart from
+registration, pairing and disconnection. Everything else is answers to the
+questions monitoring asks.
 
-| Składnik | Zakres |
+## Screenshots
+
+The admin UI ships in English and Polish; the screenshots show the Polish one.
+
+![Dashboard tile](docs/screenshots/dashboard-tile.png)
+
+*The health tile on the admin dashboard: score ring, check counters and the
+three most urgent issues.*
+
+![Service health](docs/screenshots/service-health.png)
+
+*Service health on the module screen.*
+
+![Security hygiene](docs/screenshots/security.png)
+
+*Security hygiene checks, each with a ready-to-copy fix.*
+
+## Requirements
+
+| Component | Range |
 | --- | --- |
-| Magento | 2.4.x (Open Source i Adobe Commerce) |
-| PHP | 8.1 i wyżej |
-| Tryb pracy | dowolny, ale sekcja bezpieczeństwa ocenia go pod kątem produkcji |
+| Magento | 2.4.x (Open Source and Adobe Commerce) |
+| PHP | 8.1 and above |
+| Deploy mode | any, but the security section judges it against production standards |
 
-Moduł nie wymaga RabbitMQ, Redisa ani wyszukiwarki: sprawdza to, co w sklepie
-faktycznie jest, a o resztę nie pyta.
+The module does not require RabbitMQ, Redis or a search engine: it checks what
+the store actually has and does not ask about the rest.
 
-## Instalacja
+## Installation
 
-Moduł nie jest opublikowany w publicznym katalogu pakietów Composera
-(Packagist), więc samo `composer require calmfox/watch-magento` kończy się błędem
-„could not be found". Instaluje się go z paczki `calmfox-watch-magento.zip`, którą
-podaje panel Calmfox Watch (Integracje, przycisk „Pobierz dla Magento 2").
-W paczce jest jeden katalog: `calmfox-watch/`.
+The module is not published in the public Composer package index (Packagist),
+so a plain `composer require calmfox/watch-magento` fails with "could not be
+found". It is installed from the `calmfox-watch-magento.zip` archive provided
+by the Calmfox Watch panel (Integrations, the "Download for Magento 2" button).
+The archive contains a single directory: `calmfox-watch/`.
 
-### Droga 1: katalog app/code (zalecana)
+### Option 1: the app/code directory (recommended)
 
 ```bash
 mkdir -p app/code/Calmfox
@@ -37,254 +56,269 @@ mv app/code/Calmfox/calmfox-watch app/code/Calmfox/Watch
 
 bin/magento module:enable Calmfox_Watch
 bin/magento setup:upgrade
-bin/magento setup:di:compile     # tylko w trybie produkcyjnym
+bin/magento setup:di:compile     # production mode only
 bin/magento cache:flush
 ```
 
-Nazwa katalogu docelowego nie jest tu dowolna. Magento wczytuje pliki
-`app/code/*/*/registration.php` (lista wzorców leży w
-`app/etc/registration_globlist.php`), a `registration.php` modułu melduje go jako
-`Calmfox_Watch`. Composer nie bierze przy tej drodze udziału w niczym.
+The name of the target directory is not arbitrary here. Magento loads the
+`app/code/*/*/registration.php` files (the list of patterns lives in
+`app/etc/registration_globlist.php`), and the module's `registration.php`
+registers it as `Calmfox_Watch`. Composer plays no part at all in this option.
 
-### Droga 2: Composerem z rozpakowanej paczki
+### Option 2: Composer, from the unpacked archive
 
-Dla wdrożeń, w których kod spoza rdzenia ma siedzieć w `vendor`:
+For deployments where non-core code is supposed to live in `vendor`:
 
 ```bash
-mkdir -p pakiety && unzip calmfox-watch-magento.zip -d pakiety
-composer config repositories.calmfox-watch '{"type":"path","url":"./pakiety/calmfox-watch","options":{"symlink":false}}'
+mkdir -p packages && unzip calmfox-watch-magento.zip -d packages
+composer config repositories.calmfox-watch '{"type":"path","url":"./packages/calmfox-watch","options":{"symlink":false}}'
 composer require calmfox/watch-magento:@dev
 
 bin/magento module:enable Calmfox_Watch
 bin/magento setup:upgrade
-bin/magento setup:di:compile     # tylko w trybie produkcyjnym
+bin/magento setup:di:compile     # production mode only
 bin/magento cache:flush
 ```
 
-Trzy miejsca, w których łatwo się potknąć:
+Three places where it is easy to trip up:
 
-- **`"symlink": false`** każe Composerowi skopiować pliki. Bez tego katalog
-  w `vendor` jest wyłącznie dowiązaniem do `pakiety` i zniknie razem z nim.
-- **Rozpakowany katalog zostaje w projekcie** (i w repozytorium, jeżeli wdrożenie
-  idzie z gita). Composer czyta go przy każdym `composer install`, więc jego
-  skasowanie wywróci następne wdrożenie.
-- **`@dev` przy nazwie modułu jest konieczne.** `composer.json` paczki świadomie
-  nie ma pola `version` (Composer wylicza wersję z tagu repozytorium, a paczka
-  tagu nie ma), więc repozytorium typu `path` melduje ją jako `dev-main`.
+- **`"symlink": false`** tells Composer to copy the files. Without it, the
+  directory in `vendor` is nothing but a symlink to `packages` and will vanish
+  together with it.
+- **The unpacked directory stays in the project** (and in the repository, if
+  the deployment runs from git). Composer reads it on every `composer install`,
+  so deleting it will break the next deployment.
+- **`@dev` after the module name is required.** The archive's `composer.json`
+  deliberately has no `version` field (Composer derives the version from the
+  repository tag, and the archive has no tag), so a `path` repository reports
+  it as `dev-main`.
 
-Aktualizacja: rozpakowanie nowszej paczki w to samo miejsce (przy drodze 1 podmiana
-plików w `app/code/Calmfox/Watch`), a potem `bin/magento setup:upgrade`
-i przeczyszczenie pamięci podręcznej.
+Updating: unpack the newer archive into the same place (with option 1, replace
+the files in `app/code/Calmfox/Watch`), then run `bin/magento setup:upgrade`
+and flush the cache.
 
-### Adres kontrolny musi być publiczny
+### The health endpoint must be public
 
-Powstaje trasa `GET /calmfox-watch/health`. To monitoring nas odpytuje, a nie
-odwrotnie, więc nie ma sesji, którą mógłby się wykazać: autoryzacją jest sekret
-w parametrze `key`, porównywany funkcją `hash_equals`.
+The module adds the `GET /calmfox-watch/health` route. Monitoring polls us, not
+the other way round, so there is no session it could present: authorisation is
+a secret in the `key` parameter, compared with `hash_equals`.
 
-Trasy sklepowe w Magento są publiczne z natury, więc zwykle nie trzeba nic
-robić. Sprawdź jednak trzy rzeczy, bo to one blokują ten adres najczęściej:
+Storefront routes in Magento are public by nature, so usually there is nothing
+to do. Check three things, though, because these are what most often block
+the endpoint:
 
-- **Zapora aplikacyjna (WAF) i reguły serwera WWW** — nietypowa ścieżka
-  z długim parametrem bywa odrzucana automatem.
-- **Pełna pamięć podręczna stron i Varnish** — odpowiedź ma nagłówek
-  `Cache-Control: no-store`, więc ani wbudowana pamięć podręczna Magento,
-  ani domyślna konfiguracja Varnisha jej nie zapiszą. Jeżeli przed sklepem
-  stoi inna warstwa buforująca (CDN, cudzy pośrednik), wyklucz z niej ścieżkę
-  `/calmfox-watch/`: monitoring ma dostawać stan z tej chwili, nie sprzed godziny.
-- **Tryb konserwacji** — na czas wdrożenia Magento oddaje 503 na wszystkim.
-  To poprawne zachowanie i monitoring je zobaczy, warto więc planować okno
-  serwisowe w panelu Calmfox Watch.
+- **The web application firewall (WAF) and web server rules**: an unusual
+  path with a long parameter sometimes gets rejected automatically.
+- **Full page cache and Varnish**: the response carries a
+  `Cache-Control: no-store` header, so neither Magento's built-in cache nor
+  the default Varnish configuration will store it. If another caching layer
+  sits in front of the store (a CDN, a third-party proxy), exclude the
+  `/calmfox-watch/` path from it: monitoring should get the state as of now,
+  not as of an hour ago.
+- **Maintenance mode**: during a deployment Magento returns 503 for
+  everything. That is correct behaviour and monitoring will see it, so it is
+  worth scheduling a maintenance window in the Calmfox Watch panel.
 
-Ekran w panelu i polecenie `calmfox:watch:status` wykonują samokontrolę pętlą
-zwrotną i powiedzą wprost, jeżeli adres jest niedostępny z samego serwera.
+The module screen in the Magento admin and the `calmfox:watch:status` command
+run a loopback self-check and will say outright if the endpoint is unreachable
+from the server itself.
 
-### Połączenie z panelem
+### Connecting to the Calmfox Watch panel
 
-Panel administracyjny: pozycja **Calmfox Watch** w głównym pasku menu, zaraz
-za pulpitem (uprawnienie `Calmfox_Watch::watch`, więc rola bez tego zasobu
-ekranu nie zobaczy). Pulpit panelu dostaje przy okazji kafelek z kondycją:
-status, liczby sprawdzeń i najwyżej trzy najpilniejsze sprawy, z odnośnikiem
-do pełnego ekranu. Kafelek widzi wyłącznie rola z tym samym uprawnieniem.
+Magento admin: the **Calmfox Watch** item in the main menu bar, right after
+the dashboard (the `Calmfox_Watch::watch` permission, so a role without this
+resource will not see the screen). The admin dashboard also gets a health
+tile: the status, check counts and at most three of the most urgent issues,
+with a link to the full screen. The tile is visible only to a role with the
+same permission.
 
-Trzy drogi, wszystkie kończą się tak samo:
+Three ways, all ending the same:
 
-1. **Połącz przez watch.calmfox.net** — wychodzimy do panelu, tam logowanie albo
-   założenie konta, i wracamy tutaj z kluczem instalacyjnym.
-2. **Pakiet Free z ekranu** — podajesz adres e-mail, konto powstaje od razu.
-3. **Wiersz poleceń**, gdy wdrożenie jest skryptowe:
+1. **Connect via watch.calmfox.net**: we go out to the Calmfox Watch panel,
+   you sign in or create an account there, and we come back here with an
+   installation key.
+2. **The Free plan from the module screen**: you enter an e-mail address and
+   the account is created right away.
+3. **The command line**, when the deployment is scripted:
 
 ```bash
-# nowe konto w pakiecie Free
-bin/magento calmfox:watch:register wlasciciel@sklep.pl
+# new account on the Free plan
+bin/magento calmfox:watch:register owner@shop.example
 
-# albo dopięcie do istniejącej strony w panelu (klucz z ekranu Integracje)
+# or attach to an existing site in the panel (key from the Integrations screen)
 bin/magento calmfox:watch:pair fxp_live_0123456789abcdef
 ```
 
-Adres sklepu bierzemy z konfiguracji (`web/secure/base_url`, w drugiej
-kolejności `web/unsecure/base_url`), więc polecenia działają też w CLI, gdzie
-nie ma żądania HTTP. Oba wypisują adres kontrolny, który zgłaszają do panelu,
-więc od razu widać, czy jest poprawny.
+The store address is taken from the configuration (`web/secure/base_url`, with
+`web/unsecure/base_url` as the fallback), so the commands also work in the CLI,
+where there is no HTTP request. Both print the health endpoint they report to
+the Calmfox Watch panel, so you can see straight away whether it is correct.
 
-> **Panel na osobnej domenie**: przycisk „Połącz przez Calmfox Watch" znika.
-> Powrót z panelu niesie jawny klucz instalacyjny, więc wolno nam wrócić
-> wyłącznie pod panel administracyjny łączonej domeny. Przy panelu pod innym
-> adresem zostaje parowanie kluczem, które działa tak samo.
+> **Magento admin on a separate domain**: the "Connect via Calmfox Watch"
+> button disappears. The return from the Calmfox Watch panel carries the
+> installation key in plain form, so we may only return to the Magento admin
+> of the domain being connected. With the admin under a different address,
+> pairing with a key remains, and it works just the same.
 
-## Konfiguracja
+## Configuration
 
-Wszystko ma sensowne wartości domyślne i nie ma osobnej sekcji w Stores →
-Configuration. To decyzja, nie przeoczenie: adres API i katalog stanu muszą
-być znane także wtedy, gdy baza nie odpowiada, a to jest właśnie ten moment,
-w którym monitoring ma pracować.
+Everything has sensible defaults and there is no separate section in Stores →
+Configuration. This is a decision, not an oversight: the API address and the
+state directory must be known even when the database does not respond, and
+that is exactly the moment monitoring is supposed to be working.
 
-Zmienia się je zmienną środowiskową albo wpisem w `app/etc/env.php`:
+They are changed with an environment variable or an entry in
+`app/etc/env.php`:
 
 ```php
 return [
     // ...
     'calmfox_watch' => [
-        // Adres API. Zmienna środowiskowa: CALMFOX_WATCH_API_URL.
+        // API address. Environment variable: CALMFOX_WATCH_API_URL.
         'api_url' => 'https://watch.calmfox.net',
 
-        // Katalog stanu. Zmienna środowiskowa: CALMFOX_WATCH_STATE_DIR.
-        // Domyślnie var/calmfox-watch.
-        'state_dir' => '/var/www/sklep/shared/calmfox-watch',
+        // State directory. Environment variable: CALMFOX_WATCH_STATE_DIR.
+        // Defaults to var/calmfox-watch.
+        'state_dir' => '/var/www/shop/shared/calmfox-watch',
 
-        // Polecenie Composera dla calmfox:watch:updates.
+        // Composer command for calmfox:watch:updates.
         'composer_binary' => 'composer',
     ],
 ];
 ```
 
-Limit dysku konta hostingowego ustawia się na ekranie w panelu sklepu, bo to
-jedyna liczba, której serwer nie zna, a klient ma ją w umowie albo w panelu
-hostingu.
+The hosting account's disk limit is set on the module screen in the Magento
+admin, because it is the only number the server does not know, while the
+customer has it in the contract or in the hosting panel.
 
-## Stan, sekret i wdrożenia z katalogiem na wydanie
+## State, the secret and directory-per-release deployments
 
-Stan (sekret adresu kontrolnego, znacznik parowania, historia wersji,
-policzone aktualizacje) leży w **pliku**, nie w bazie i nie w konfiguracji
-Magento: `var/calmfox-watch/state.json`, prawa 600, zapis atomowy.
+The state (the health endpoint secret, the pairing marker, the version
+history, the computed update counts) lives in a **file**, not in the database
+and not in the Magento configuration: `var/calmfox-watch/state.json`,
+permissions 600, atomic writes.
 
-Powody są dwa i oba są praktyczne. Kontraktowy: przy padniętej bazie adres
-kontrolny ma odpowiedzieć `db: fail` i kodem 503, a nie zamilknąć. Magentowy:
-`core_config_data` idzie przez pamięć podręczną konfiguracji, którą wdrożenie
-czyści w połowie pracy.
+There are two reasons and both are practical. The contract one: with the
+database down, the health endpoint is supposed to answer `db: fail` with a 503
+code, not go silent. The Magento one: `core_config_data` goes through the
+configuration cache, which a deployment flushes halfway through its work.
 
-> **Uwaga przy wdrożeniach typu „nowy katalog na każde wydanie"** (Deployer,
-> Capistrano, pipeline deployment, symlink `current`): katalog stanu MUSI być
-> współdzielony między wydaniami. Inaczej każde wdrożenie tworzy nowy sekret,
-> adres kontrolny zapamiętany w panelu przestaje działać i monitoring zgłasza
-> milczący sklep. Historia zmian wersji też zaczyna się wtedy od zera.
+> **Note for "new directory for every release" deployments** (Deployer,
+> Capistrano, pipeline deployment, a `current` symlink): the state directory
+> MUST be shared between releases. Otherwise every deployment creates a new
+> secret, the health endpoint remembered by the Calmfox Watch panel stops
+> working and monitoring reports a silent store. The version change history
+> also starts from scratch then.
 >
-> `var/` zwykle i tak jest współdzielony. Jeżeli nie jest, ustaw
-> `CALMFOX_WATCH_STATE_DIR=/var/www/sklep/shared/calmfox-watch`.
+> `var/` is usually shared anyway. If it is not, set
+> `CALMFOX_WATCH_STATE_DIR=/var/www/shop/shared/calmfox-watch`.
 
-Wymiana sekretu (przycisk „Wymień klucz") działa z oknem 15 minut: nowy sekret
-obowiązuje od razu, poprzedni jest honorowany jeszcze kwadrans, więc nieudane
-przepięcie w panelu nie zrywa monitoringu.
+Replacing the secret (the "Replace the key" button) works with a 15-minute
+window: the new secret takes effect immediately and the previous one is
+honoured for another quarter of an hour, so a failed switch-over in the
+Calmfox Watch panel does not break monitoring.
 
-## Zadania cykliczne
+## Scheduled tasks
 
-Moduł dokłada jedno własne zadanie do harmonogramu Magento
-(`calmfox_watch_reconcile`, 4:17 w nocy): tanie uzgodnienie migawki wersji
-pakietów, bez sieci. Dzięki niemu wdrożenie zrobione poza sklepem zostawia
-ślad w historii nawet wtedy, gdy monitoring akurat nie pytał o sekcję
-bezpieczeństwa.
+The module adds one job of its own to the Magento scheduler
+(`calmfox_watch_reconcile`, 4:17 at night): a cheap reconciliation of the
+package version snapshot, with no network access. Thanks to it, a deployment
+made outside the store leaves a trace in the history even when monitoring
+happened not to ask for the security section.
 
-Liczenia zaległych aktualizacji świadomie tam nie ma: wymaga Composera
-i wyjścia do repozytoriów pakietów, a proces sklepu nie ma po co tam chodzić.
-Idzie do crona systemowego, obok właściwego crona Magento:
+Counting pending updates is deliberately not there: it requires Composer and
+a trip out to the package repositories, and the store process has no business
+going there. It goes into the system cron, next to the actual Magento cron:
 
 ```cron
-# cron Magento (to on wysyła maile o zamówieniach i przelicza reguły cenowe)
-* * * * *  cd /var/www/sklep && php bin/magento cron:run >/dev/null 2>&1
+# Magento cron (this is what sends order e-mails and recalculates price rules)
+* * * * *  cd /var/www/shop && php bin/magento cron:run >/dev/null 2>&1
 
-# zaległe aktualizacje pakietów dla Calmfox Watch (raz na dobę, potrzebuje sieci)
-15 3 * * * cd /var/www/sklep && php bin/magento calmfox:watch:updates -q
+# pending package updates for Calmfox Watch (once a day, needs network access)
+15 3 * * * cd /var/www/shop && php bin/magento calmfox:watch:updates -q
 ```
 
-Sprawdzenie `magento_cron` pilnuje pierwszego z tych wpisów: pyta harmonogram
-Magento, kiedy ostatnie zadanie skończyło się powodzeniem.
+The `magento_cron` check watches the first of these entries: it asks the
+Magento scheduler when the last job finished successfully.
 
-## Polecenia
+## Commands
 
-| Polecenie | Do czego |
+| Command | What it is for |
 | --- | --- |
-| `calmfox:watch:status` | Stan połączenia, adres kontrolny, obie sekcje sprawdzeń |
-| `calmfox:watch:register <email>` | Zakłada konto Free i łączy sklep |
-| `calmfox:watch:pair [token]` | Łączy z istniejącą stroną w panelu |
-| `calmfox:watch:disconnect` | Kończy monitoring wnętrza i mówi o tym panelowi |
-| `calmfox:watch:updates` | Liczy zaległe aktualizacje, do crona systemowego |
-| `calmfox:watch:health [--section=security]` | Wypisuje payload lokalnie, bez sieci |
+| `calmfox:watch:status` | Connection state, the health endpoint, both check sections |
+| `calmfox:watch:register <email>` | Creates a Free account and connects the store |
+| `calmfox:watch:pair [token]` | Connects to an existing site in the Calmfox Watch panel |
+| `calmfox:watch:disconnect` | Ends inside monitoring and tells the Calmfox Watch panel about it |
+| `calmfox:watch:updates` | Counts pending updates, meant for the system cron |
+| `calmfox:watch:health [--section=security]` | Prints the payload locally, with no network access |
 
-Usuwasz moduł? Uruchom najpierw `calmfox:watch:disconnect`. Hub traktuje ciszę
-jako sygnał i po trzech nieudanych odpytaniach otworzy incydent, więc lepiej
-powiedzieć mu wprost „kończę".
+Removing the module? Run `calmfox:watch:disconnect` first. Calmfox Watch treats
+silence as a signal and will open an incident after three failed polls, so it
+is better to tell it outright "I'm done".
 
-## Co sprawdzamy
+## What we check
 
-### Sekcja `health` (monitoring pyta co minutę)
+### The `health` section (monitoring asks every minute)
 
-| Identyfikator | Co sprawdza |
+| Identifier | What it checks |
 | --- | --- |
-| `db` | Zapytanie kontrolne przez połączenie Magento, z pomiarem czasu. Brak bazy to `fail`, nie wyjątek. |
-| `disk` | Prawo zapisu do `var/`, `pub/media` i `generated/`, rozmiar instalacji, zajętość względem podanego limitu konta. |
-| `smtp` | Połączenie z serwerem poczty (TCP, powitanie 220, EHLO). To test POŁĄCZENIA, nie doręczenia. |
-| `magento_cron` | Kiedy ostatnie zadanie cykliczne skończyło się powodzeniem, ile było błędów i pominięć w ostatniej dobie. |
-| `indexers` | Które indeksy są nieaktualne. Sklep z nieaktualnym indeksem działa i pokazuje wczorajsze ceny. |
-| `app_cache` | Zapis i odczyt klucza kontrolnego w pamięci podręcznej aplikacji, razem z nazwą silnika. |
-| `checkout` | Czy w każdym włączonym widoku sklepu da się kupić: metoda płatności (poza Zero Subtotal) i metoda dostawy. |
-| `search_engine` | Stan klastra Elasticsearch albo OpenSearch. W 2.4 bez niego padają wyszukiwarka i listingi. |
-| `queue` | Zaległości w kolejkach bazodanowych. Opcjonalny: przy pustej tabeli (albo RabbitMQ) check w ogóle nie powstaje. |
+| `db` | A control query over the Magento connection, with timing. No database means `fail`, not an exception. |
+| `disk` | Write permission to `var/`, `pub/media` and `generated/`, the installation size, usage against the account limit you entered. |
+| `smtp` | A connection to the mail server (TCP, the 220 greeting, EHLO). This is a CONNECTION test, not a delivery test. |
+| `magento_cron` | When the last scheduled job finished successfully, how many errors and missed jobs there were in the last 24 hours. |
+| `indexers` | Which indexes are out of date. A store with an outdated index works and shows yesterday's prices. |
+| `app_cache` | Writing and reading a control key in the application cache, together with the backend name. |
+| `checkout` | Whether a purchase is possible in every enabled store view: a payment method (other than Zero Subtotal) and a shipping method. |
+| `search_engine` | The state of the Elasticsearch or OpenSearch cluster. In 2.4, search and listings go down without it. |
+| `queue` | Backlog in the database queues. Optional: with an empty table (or RabbitMQ) the check is not created at all. |
 
-### Sekcja `security` (monitoring pyta raz na dobę)
+### The `security` section (monitoring asks once a day)
 
 `admin_count`, `admin_login`, `admin_path`, `two_factor`, `app_mode`,
 `debug_display`, `https`, `php_version`, `config_perms`, `dir_perms`,
 `crypt_key`, `dev_packages`, `pending_updates`.
 
-Magentowe w tej liście są cztery: adres panelu razem z kluczem w adresach
-(`admin_path`), logowanie dwuskładnikowe (`two_factor`), tryb wdrożenia
-(`app_mode`) i klucz szyfrujący z `app/etc/env.php`, którym zaszyfrowane są
-dane dostępu do bramek płatniczych (`crypt_key`).
+Four on this list are Magento-specific: the admin URL together with the secret
+key in URLs (`admin_path`), two-factor authentication (`two_factor`), the
+deploy mode (`app_mode`) and the encryption key from `app/etc/env.php`, which
+encrypts the payment gateway credentials (`crypt_key`).
 
-To podstawowa higiena, a nie audyt. Nie skanujemy złośliwego kodu, nie liczymy
-sum kontrolnych plików platformy i nie robimy kopii zapasowych.
+This is basic hygiene, not an audit. We do not scan for malicious code, we do
+not compute checksums of the platform files and we do not make backups.
 
-### Czego świadomie nie robimy
+### What we deliberately do not do
 
-- Nie wysyłamy listy pakietów z wersjami. `site.updates` to same liczby, bo
-  spis „co i w jakiej wersji" jest gotową mapą dziur dla atakującego. Nazwy
-  jadą wyłącznie tam, gdzie są istotą funkcji: w historii zmian wersji oraz
-  jako skład WŁĄCZONYCH modułów (`signals.activePlugins`, bez wersji). Ten
-  drugi wyjątek jest świadomy i ma cenę: kto zdobędzie sekretny adres
-  kontrolny, zobaczy listę modułów. Bez nazw zdarzenie o wyłączonym module
-  brzmiałoby „coś się zmieniło", a wtedy nie da się na nie zareagować.
-- Nie udajemy automatycznych aktualizacji. Magento ich nie ma, więc pole
-  `signals.autoUpdates` w ogóle nie jedzie, zamiast wieźć wartość, która
-  znaczyłaby „sprawdzone".
-- Nie wysyłamy loginów. Zamiast nich jedzie liczba kont administracyjnych
-  i jednokierunkowy odcisk ich zbioru, solony sekretem instalacji. Panel
-  wykrywa ZMIANĘ składu, nie tożsamość.
-- Nie zaglądamy w dane sprzedażowe. Sprawdzenie `checkout` patrzy wyłącznie
-  na konfigurację widoków sklepu, nigdy na zamówienia ani obroty.
-- Nie zgadujemy liczb, których nie znamy. Dopóki nikt nie uruchomił
-  `calmfox:watch:updates`, pole `updates` nie jedzie w ogóle. Zero znaczyłoby
-  „sprawdzone, nie ma czego aktualizować", a to byłaby nieprawda.
-- Nie udajemy, że widzimy pocztę wysyłaną przez moduł innego producenta.
-  Znamy wyłącznie ustawienia `system/smtp` i tak to opisujemy.
+- We do not send a list of packages with versions. `site.updates` is numbers
+  only, because an inventory of "what, and in which version" is a ready-made
+  map of holes for an attacker. Names travel only where they are the essence
+  of the feature: in the version change history and as the set of ENABLED
+  modules (`signals.activePlugins`, without versions). That second exception
+  is deliberate and has a price: whoever obtains the secret health endpoint
+  will see the list of modules. Without names, an event about a disabled
+  module would read "something changed", and then there is no way to react
+  to it.
+- We do not pretend there are automatic updates. Magento has none, so the
+  `signals.autoUpdates` field is not sent at all, instead of carrying a value
+  that would mean "checked".
+- We do not send logins. What travels instead is the number of admin accounts
+  and a one-way fingerprint of their set, salted with the installation secret.
+  The Calmfox Watch panel detects a CHANGE in the set, not identities.
+- We do not look into sales data. The `checkout` check looks only at the
+  store view configuration, never at orders or revenue.
+- We do not guess numbers we do not know. Until someone has run
+  `calmfox:watch:updates`, the `updates` field is not sent at all. Zero would
+  mean "checked, nothing to update", and that would be untrue.
+- We do not pretend to see mail sent by another vendor's module. We know only
+  the `system/smtp` settings, and that is how we describe it.
 
-## Własne sprawdzenia
+## Custom checks
 
-Usługi, o których wie tylko właściciel sklepu (integracja z magazynem, mostek
-do systemu księgowego, demon synchronizacji cen), dopina się własną klasą
-i jednym wpisem w `etc/di.xml` swojego modułu:
+Services only the store owner knows about (a warehouse integration, a bridge
+to the accounting system, a price synchronisation daemon) are plugged in with
+your own class and a single entry in your module's `etc/di.xml`:
 
 ```php
-namespace Vendor\Sklep\Monitoring;
+namespace Vendor\Shop\Monitoring;
 
 use Calmfox\Watch\Check\HealthCheckInterface;
 use Calmfox\Watch\Core\CheckResult;
@@ -298,11 +332,11 @@ class WarehouseCheck implements HealthCheckInterface
         $ms = (int) round((microtime(true) - $start) * 1000);
 
         if (!\is_resource($socket)) {
-            return CheckResult::fail('warehouse', 'Integracja z magazynem', 'Usługa nie przyjmuje połączeń.', $ms);
+            return CheckResult::fail('warehouse', 'Warehouse integration', 'The service is not accepting connections.', $ms);
         }
         fclose($socket);
 
-        return CheckResult::ok('warehouse', 'Integracja z magazynem', null, $ms);
+        return CheckResult::ok('warehouse', 'Warehouse integration', null, $ms);
     }
 }
 ```
@@ -311,86 +345,93 @@ class WarehouseCheck implements HealthCheckInterface
 <virtualType name="Calmfox\Watch\Model\HealthRunner" type="Calmfox\Watch\Check\CheckRunner">
     <arguments>
         <argument name="checks" xsi:type="array">
-            <item name="warehouse" xsi:type="object">Vendor\Sklep\Monitoring\WarehouseCheck</item>
+            <item name="warehouse" xsi:type="object">Vendor\Shop\Monitoring\WarehouseCheck</item>
         </argument>
     </arguments>
 </virtualType>
 ```
 
-Wpisy scalają się z naszymi, więc powyższe DOKŁADA sprawdzenie. Wpis o nazwie,
-której już używamy, nadpisuje nasz: tak wyłącza się pojedynczy check, gdy
-w danym sklepie nie ma sensu.
+The entries are merged with ours, so the above ADDS a check. An entry with a
+name we already use overrides ours: that is how you switch off a single check
+when it makes no sense in a given store.
 
-Dwie zasady, obie z kontraktu:
+Two rules, both from the contract:
 
-1. Zwróć `null`, gdy sprawdzenie nie dotyczy tej instalacji. Nie wysyłamy
-   „ok" o czymś, czego nie ma.
-2. Trzymaj krótki, twardy limit czasu. Adres kontrolny odpowiada co minutę
-   i nie może zamulić sklepu.
+1. Return `null` when the check does not apply to this installation. We do not
+   send "ok" about something that is not there.
+2. Keep a short, hard timeout. The health endpoint answers every minute and
+   must not bog the store down.
 
-Identyfikator spoza katalogu parametrów trafi do panelu z etykietą z payloadu
-i notką „usługa dopięta własnym rozszerzeniem".
+An identifier from outside the parameter catalogue will reach the Calmfox Watch
+panel with the label from the payload and the note "service added by a custom
+extension".
 
-## Historia zmian wersji
+## Version change history
 
-Magento nie ma haka aktualizacji: moduły wchodzą Composerem, zwykle z innej
-maszyny, a `setup:upgrade` dokłada tylko zmiany w bazie. Dlatego moduł
-porównuje migawki `vendor/composer/installed.php` (plus wersję PHP) przy
-budowaniu sekcji `security`, w nocnym zadaniu i przy `calmfox:watch:updates`.
+Magento has no update hook: modules come in through Composer, usually from
+another machine, and `setup:upgrade` only applies database changes. That is
+why the module compares snapshots of `vendor/composer/installed.php` (plus the
+PHP version) when building the `security` section, in the nightly job and on
+`calmfox:watch:updates`.
 
-Konsekwencje, które trzeba znać:
+Consequences you need to know about:
 
-- Znacznik `at` to **czas wykrycia** zmiany, a nie czas wdrożenia. Zwykle
-  różnią się o minuty. Do zdania „awaria zaczęła się po aktualizacji modułu X"
-  to wystarcza, do rozliczania wdrożeń co do sekundy nie.
-- Historia zaczyna się od instalacji modułu. Wcześniejszych zmian nie da się
-  odtworzyć, bo nie ma z czego.
-- Zmiana metapakietu wydania, `magento/framework` albo PHP zapisuje się jako
-  `core`, pozostałe pakiety jako `plugin`. Motywy Magento są zwykłymi
-  pakietami, więc nie mają osobnej kategorii. Bufor to 200 wpisów.
+- The `at` timestamp is the **time the change was detected**, not the time of
+  the deployment. They usually differ by minutes. For a statement like "the
+  outage started after module X was updated" that is enough; for accounting
+  for deployments to the second it is not.
+- The history starts when the module is installed. Earlier changes cannot be
+  reconstructed, because there is nothing to reconstruct them from.
+- A change of the release metapackage, `magento/framework` or PHP is recorded
+  as `core`, the remaining packages as `plugin`. Magento themes are ordinary
+  packages, so they have no separate category. The buffer holds 200 entries.
 
-## Prywatność
+## Privacy
 
-Do Calmfox jedzie: domena sklepu, podany adres e-mail (tylko przy zakładaniu
-konta) i dane diagnostyczne opisane wyżej: statusy sprawdzeń z opisami, wersje
-platformy i PHP, liczby zaległych aktualizacji, liczba i odcisk kont
-administracyjnych oraz historia zmian wersji pakietów. Żadnych treści sklepu,
-zamówień, danych klientów, loginów ani haseł.
+What travels to Calmfox: the store domain, the e-mail address you provided
+(only when creating an account) and the diagnostic data described above: check
+statuses with descriptions, the platform and PHP versions, the pending update
+counts, the number and fingerprint of admin accounts and the package version
+change history. No store content, orders, customer data, logins or passwords.
 
-## Testy
+## Tests
 
-Rdzeń modułu (`Core/`) jest wolny od Magento: to zwykłe klasy PHP. Dzięki temu
-kontrakt z panelem da się przetestować bez kontenera, bazy i zainstalowanego
-sklepu.
+The module's core (`Core/`) is free of Magento: it is plain PHP classes. Thanks
+to that, the contract with the Calmfox Watch panel can be tested without a
+container, a database or an installed store.
 
-```bash
-../../api/vendor/bin/phpunit -c phpunit.xml.dist
-```
-
-Testy pilnują między innymi: agregacji `ok`/`warn`/`fail`, odrzucenia złego
-klucza, ważności poprzedniego sekretu w oknie rotacji, jednorazowości znacznika
-łączenia przez panel, zgodności podpisu z weryfikacją po stronie panelu,
-pominięcia pola `updates` przy braku danych, porównywania migawek wersji oraz
-rozbioru ustawień poczty Magento.
-
-Przykładowe odpowiedzi obu sekcji leżą w `docs/sample-health.json`
-i `docs/sample-security.json`. Powstają z tego samego kodu, który odpowiada
-monitoringowi, a test pilnuje, żeby się nie rozjechały. Regeneracja po
-świadomej zmianie kontraktu:
+The tests ship their own PSR-4 autoloader (`tests/bootstrap.php`), so the module
+needs no `composer install` of its own. Any PHPUnit 10 or later will do:
 
 ```bash
-CALMFOX_WRITE_SAMPLES=1 ../../api/vendor/bin/phpunit --filter SamplePayloads
+phpunit -c phpunit.xml.dist
 ```
 
-## Granice ochrony
+Among other things, the tests guard: the `ok`/`warn`/`fail` aggregation,
+rejection of a wrong key, validity of the previous secret within the rotation
+window, single use of the connect-via-panel marker, agreement of the signature
+with the verification on the Calmfox Watch side, omission of the `updates`
+field when there is no data, comparison of version snapshots and parsing of
+Magento's mail settings.
 
-Odpowiedź podpisujemy kluczem instalacji (HMAC-SHA256 nad znacznikiem
-jednorazowym, czasem wygenerowania i dokładnymi bajtami treści). To odcina
-tanie ataki: podstawiony plik statyczny, odpowiedź z pamięci podręcznej,
-powtórkę sprzed przejęcia sklepu. Kto ma pełną kontrolę nad serwerem, ma też
-sekret i potrafi podpisać kłamstwo. Podpis nie zastępuje odzyskiwania serwera
-i tak o nim mówimy.
+Sample responses for both sections live in `docs/sample-health.json` and
+`docs/sample-security.json`. They are produced by the same code that answers
+monitoring, and a test makes sure they do not drift apart. To regenerate them
+after a deliberate contract change:
 
-## Licencja
+```bash
+CALMFOX_WRITE_SAMPLES=1 phpunit --filter SamplePayloads
+```
 
-MIT.
+## Limits of protection
+
+We sign the response with the installation key (HMAC-SHA256 over a nonce, the
+generation time and the exact bytes of the body). This cuts off the cheap
+attacks: a planted static file, a response served from a cache, a replay from
+before the store was taken over. Whoever has full control of the server also
+has the secret and can sign a lie. The signature is no substitute for
+recovering the server, and that is how we talk about it.
+
+## Licence
+
+MIT, see [LICENSE](LICENSE).

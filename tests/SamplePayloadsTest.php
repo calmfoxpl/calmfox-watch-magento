@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  * plikiem a kodem byłby rozjazdem między obietnicą a odpowiedzią.
  *
  * Regeneracja po świadomej zmianie kontraktu:
- *   CALMFOX_WRITE_SAMPLES=1 ../../api/vendor/bin/phpunit --filter SamplePayloads
+ *   CALMFOX_WRITE_SAMPLES=1 phpunit --filter SamplePayloads
  */
 final class SamplePayloadsTest extends TestCase
 {

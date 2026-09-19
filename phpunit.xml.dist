@@ -4,9 +4,9 @@
     potrzebują kontenera, bazy ani zainstalowanego sklepu: wystarczy autoloader
     PSR-4 z tests/bootstrap.php. Uruchomienie z katalogu modułu:
 
-        ../../api/vendor/bin/phpunit -c phpunit.xml.dist
+        phpunit -c phpunit.xml.dist
 
-    (albo dowolny PHPUnit 10+; pakiet nie wymaga własnego composer install).
+    (dowolny PHPUnit 10+; pakiet nie wymaga własnego composer install).
 -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          bootstrap="tests/bootstrap.php"
