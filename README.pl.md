@@ -38,13 +38,27 @@ faktycznie jest, a o resztę nie pyta.
 
 ## Instalacja
 
-Moduł nie jest opublikowany w publicznym katalogu pakietów Composera
-(Packagist), więc samo `composer require calmfox/watch-magento` kończy się błędem
-„could not be found". Instaluje się go z paczki `calmfox-watch-magento.zip`, którą
-podaje panel Calmfox Watch (Integracje, przycisk „Pobierz dla Magento 2").
-W paczce jest jeden katalog: `calmfox-watch/`.
+Moduł jest w publicznym katalogu pakietów Composera (Packagist) jako
+`calmfox/watch-magento`. Tam, gdzie sklep nie może z niego korzystać, instaluje się
+go z paczki `calmfox-watch-magento.zip`, którą podaje panel Calmfox Watch
+(Integracje, przycisk „Pobierz dla Magento 2"). W paczce jest jeden katalog:
+`calmfox-watch/`.
 
-### Droga 1: katalog app/code (zalecana)
+### Droga 1: Composer (zalecana)
+
+```bash
+composer require calmfox/watch-magento
+
+bin/magento module:enable Calmfox_Watch
+bin/magento setup:upgrade
+bin/magento setup:di:compile     # tylko w trybie produkcyjnym
+bin/magento cache:flush
+```
+
+Aktualizacja: `composer update calmfox/watch-magento`, a potem
+`bin/magento setup:upgrade` i przeczyszczenie pamięci podręcznej.
+
+### Droga 2: paczka w katalogu app/code
 
 ```bash
 mkdir -p app/code/Calmfox
@@ -62,7 +76,7 @@ Nazwa katalogu docelowego nie jest tu dowolna. Magento wczytuje pliki
 `app/etc/registration_globlist.php`), a `registration.php` modułu melduje go jako
 `Calmfox_Watch`. Composer nie bierze przy tej drodze udziału w niczym.
 
-### Droga 2: Composerem z rozpakowanej paczki
+### Droga 3: Composerem z rozpakowanej paczki
 
 Dla wdrożeń, w których kod spoza rdzenia ma siedzieć w `vendor`:
 
@@ -88,7 +102,7 @@ Trzy miejsca, w których łatwo się potknąć:
   nie ma pola `version` (Composer wylicza wersję z tagu repozytorium, a paczka
   tagu nie ma), więc repozytorium typu `path` melduje ją jako `dev-main`.
 
-Aktualizacja: rozpakowanie nowszej paczki w to samo miejsce (przy drodze 1 podmiana
+Aktualizacja z paczki: rozpakowanie nowszej w to samo miejsce (przy drodze 2 podmiana
 plików w `app/code/Calmfox/Watch`), a potem `bin/magento setup:upgrade`
 i przeczyszczenie pamięci podręcznej.
 
