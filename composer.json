@@ -1,6 +1,6 @@
 {
     "name": "calmfox/watch-magento",
-    "description": "Monitoring wnętrza sklepu Magento 2 dla Calmfox Watch: sekretny adres kontrolny ze stanem usług (baza, dysk, poczta, zadania cykliczne, indeksy, pamięć podręczna, ścieżka zakupowa, wyszukiwarka), podstawowa higiena bezpieczeństwa i historia zmian wersji pakietów.",
+    "description": "Magento 2 integration for Calmfox Watch (https://watch.calmfox.net), a website monitoring service that scores site health from 0 to 100 (availability, security, updates, content, performance). Adds a secret health endpoint with service status (database, disk, mail, cron, indexers, cache, checkout path, search engine), basic security hygiene checks and a package version history.",
     "type": "magento2-module",
     "keywords": ["magento", "magento2", "magento2-module", "monitoring", "health", "uptime", "security"],
     "license": "MIT",
